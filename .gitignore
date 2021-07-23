@@ -1,0 +1,11 @@
+.DS_Store
+composer.lock
+vendor
+*.log
+.idea/*
+build
+.vscode
+.phpunit.result.cache
+.php_cs.cache
+cache
+.htaccess
