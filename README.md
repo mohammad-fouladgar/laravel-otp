@@ -2,8 +2,6 @@
 
 ## Introduction
 coming soon...
-It means after migrating, a table will be created which your application needs to store verification tokens.
-
 ## Testing
 ```sh
 composer test
