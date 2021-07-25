@@ -1,7 +1,10 @@
 <?php
 
-namespace Fouladgar\MobileVerification;
+namespace Fouladgar\OTP;
 
+use Fouladgar\OTP\Notifications\Channels\OTPChannel;
+use Illuminate\Notifications\ChannelManager;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -11,19 +14,18 @@ class ServiceProvider extends BaseServiceProvider
      */
     public function boot(): void
     {
+        Notification::resolved(
+            function (ChannelManager $service) {
+                $service->extend(
+                    'sms',
+                    fn($app) => new OTPChannel() // todo:new sms client service
+                );
+            }
+        );
+
         $this->loadAssetsFrom();
 
         $this->registerPublishing();
-    }
-
-    /**
-     * Register any package services.
-     */
-    public function register(): void
-    {
-        $this->mergeConfigFrom($this->getConfig(), 'otp');
-
-        $this->registerBindings();
     }
 
     /**
@@ -59,6 +61,16 @@ class ServiceProvider extends BaseServiceProvider
     protected function getConfig(): string
     {
         return __DIR__ . '/../config/config.php';
+    }
+
+    /**
+     * Register any package services.
+     */
+    public function register(): void
+    {
+        $this->mergeConfigFrom($this->getConfig(), 'otp');
+
+        $this->registerBindings();
     }
 
     /**

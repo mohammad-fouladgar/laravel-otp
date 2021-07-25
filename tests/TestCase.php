@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Fouladgar\MobileVerification\Tests;
+namespace Fouladgar\OTP\Tests;
 
-use Fouladgar\MobileVerification\ServiceProvider;
-use Illuminate\Contracts\Events\Dispatcher;
+use Fouladgar\OTP\ServiceProvider;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Orchestra\Testbench\TestCase as BaseTestCase;
-use ReflectionFunction;
 
 class TestCase extends BaseTestCase
 {
@@ -41,7 +39,7 @@ class TestCase extends BaseTestCase
      */
     protected function getEnvironmentSetUp($app): void
     {
-        $app['config']->set('mobile_verifier.sms_client', SampleSMSClient::class);
+//        $app['config']->set('mobile_verifier.sms_client', SampleSMSClient::class);
     }
 
     /**
@@ -74,9 +72,7 @@ class TestCase extends BaseTestCase
             '/__middleware__',
             [
                 'middleware' => $middleware,
-                static function () {
-                    return '__passed__';
-                },
+                static fn() => '__passed__',
             ]
         )->uri();
     }
@@ -94,39 +90,6 @@ class TestCase extends BaseTestCase
             $method,
             $this->makeMiddlewareRoute($method, $middleware),
             $data
-        );
-    }
-
-    /**
-     * Custom assertListening function for supporting Laravel < v8
-     *
-     * @param $expectedEvent
-     * @param $expectedListener
-     */
-    protected function assertListening($expectedEvent, $expectedListener)
-    {
-        $dispatcher = $this->app->make(Dispatcher::class);
-
-        foreach ($dispatcher->getListeners($expectedEvent) as $listenerClosure) {
-            $actualListener = (new ReflectionFunction($listenerClosure))
-                ->getStaticVariables()['listener'];
-
-            if ($actualListener === $expectedListener ||
-                ($actualListener instanceof Closure &&
-                    $expectedListener === Closure::class)) {
-                $this->assertTrue(true);
-
-                return;
-            }
-        }
-
-        $this->assertTrue(
-            false,
-            sprintf(
-                'Event [%s] does not have the [%s] listener attached to it',
-                $expectedEvent,
-                print_r($expectedListener, true)
-            )
         );
     }
 }
