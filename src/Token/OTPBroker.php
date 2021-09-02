@@ -5,53 +5,96 @@ declare(strict_types=1);
 namespace Fouladgar\OTP\Token;
 
 use Fouladgar\OTP\Contracts\OTPNotifiable;
+use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
+use Fouladgar\OTP\NotifiableUserRepository;
+use Illuminate\Support\Arr;
 
 class OTPBroker
 {
     private TokenRepositoryInterface $tokenRepository;
 
-    public function __construct(TokenRepositoryInterface $tokenRepository)
+    private NotifiableUserRepository $userRepository;
+
+    private array $channel;
+
+    public function __construct(TokenRepositoryInterface $tokenRepository, NotifiableUserRepository $userRepository)
     {
         $this->tokenRepository = $tokenRepository;
+        $this->userRepository  = $userRepository;
+
+        $this->channel = $this->getDefaultChannel();
     }
 
-    public function send(OTPNotifiable $user)
+    public function send(string $mobile): OTPNotifiable
     {
-        $user->sendOTPNotification('123456');
+        /** @var OTPNotifiable $user */
+        $user = $this->findOrCreateUser($mobile);
+
+        $user->sendOTPNotification(
+            $this->tokenRepository->create($user),
+            $this->channel
+        );
+
+        return $user;
     }
 
-    public function generate()
+    public function validate(string $mobile, string $token): OTPNotifiable
     {
+        /** @var OTPNotifiable $user */
+        $user = $this->findUserByMobile($mobile);
+
+        throw_unless($this->tokenExists($user, $token), InvalidOTPTokenException::class);
+
+        $this->tokenRepository->deleteExisting($user);
+
+        return $user;
     }
 
-    public function validate($user, string $token)
+    public function channel($channel = ['']): self
     {
-    }
+        $this->channel = is_array($channel) ? $channel : func_get_args();
 
-    public function expiry(): self
-    {
         return $this;
     }
 
-    public function length(): self
+    private function findOrCreateUser(string $mobile): OTPNotifiable
     {
-        return $this;
+        return $this->userRepository->findOrCreateByMobile($mobile);
     }
 
-    public function channel(): self
+    private function findUserByMobile(string $mobile): ?OTPNotifiable
     {
-        return $this;
+        return $this->userRepository->findByMobile($mobile);
     }
 
-    public function revoke()
+    private function getDefaultChannel()
     {
+        $channel = config('otp.channel');
+
+        return is_array($channel) ? $channel : Arr::wrap($channel);
     }
 
-    /**
-     * We may want to use it in the other classes.
-     */
-    public function tokenRepository(): TokenRepositoryInterface
+    //    public function generate()
+//    {
+//    }
+//
+//    public function expiry(): self
+//    {
+//        return $this;
+//    }
+//
+//    public function length(): self
+//    {
+//        return $this;
+//    }
+
+    private function tokenExists(OTPNotifiable $user, string $token): bool
     {
-        return $this->tokenRepository;
+        return $this->tokenRepository->exists($user, $token);
     }
+//
+//    public function revoke()
+//    {
+//    }
+
 }

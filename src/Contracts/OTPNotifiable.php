@@ -7,7 +7,7 @@ interface OTPNotifiable
     /**
      * Send the OTP notification.
      */
-    public function sendOTPNotification(string $token): void;
+    public function sendOTPNotification(string $token,array $channel): void;
 
     /**
      * Get the mobile number that should be used for sending via sms OTP notification.

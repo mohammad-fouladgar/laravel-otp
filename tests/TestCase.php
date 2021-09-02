@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Fouladgar\OTP\Tests;
 
 use Fouladgar\OTP\ServiceProvider;
+use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
@@ -17,15 +18,15 @@ class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        $this->withoutMiddleware(ThrottleRequests::class);
+//        $this->withoutMiddleware(ThrottleRequests::class);
 
-        $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
 
-        $this->withFactories(__DIR__ . '/database/factories');
+        $this->withFactories(__DIR__.'/database/factories');
     }
 
     /**
-     * @param \Illuminate\Foundation\Application $app
+     * @param  \Illuminate\Foundation\Application  $app
      */
     protected function getPackageProviders($app): array
     {
@@ -35,19 +36,19 @@ class TestCase extends BaseTestCase
     /**
      * Define environment setup.
      *
-     * @param \Illuminate\Foundation\Application $app
+     * @param  \Illuminate\Foundation\Application  $app
      */
     protected function getEnvironmentSetUp($app): void
     {
-//        $app['config']->set('mobile_verifier.sms_client', SampleSMSClient::class);
+        $app['config']->set('otp.model', OTPNotifiableUser::class);
     }
 
     /**
      * Call the given middleware.
      *
-     * @param string|string[] $middleware
-     * @param string $method
-     * @param array $data
+     * @param  string|string[]  $middleware
+     * @param  string  $method
+     * @param  array  $data
      */
     protected function callMiddleware($middleware, string $method = 'GET', array $data = [])
     {
@@ -61,8 +62,8 @@ class TestCase extends BaseTestCase
     /**
      * Make a dummy route with the given middleware applied.
      *
-     * @param string $method
-     * @param string|string[] $middleware
+     * @param  string  $method
+     * @param  string|string[]  $middleware
      */
     protected function makeMiddlewareRoute(string $method, $middleware): string
     {
@@ -80,9 +81,9 @@ class TestCase extends BaseTestCase
     /**
      * Call the given middleware using a JSON request.
      *
-     * @param string|string[] $middleware
-     * @param string $method
-     * @param array $data
+     * @param  string|string[]  $middleware
+     * @param  string  $method
+     * @param  array  $data
      */
     protected function callMiddlewareJson($middleware, string $method = 'GET', array $data = [])
     {

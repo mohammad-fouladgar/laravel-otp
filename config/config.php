@@ -25,34 +25,56 @@ return [
 
     /*
      |--------------------------------------------------------------------------
-     | Default Verification Tokens Table Name
+     | Default OTPNotifiable model
      |--------------------------------------------------------------------------
      |
-     | Here you should specify name of your verification tokens table in database.
-     | This table will held all information about created verification tokens for users.
+     | Here you should specify OTPNotifiable model. Keep in mind, this model must be
+     | an instance of `Fouladgar\OTP\Contracts\OTPNotifiable` and also
+     | use this `Fouladgar\OTP\Concerns\HasOTPNotify` trait.
      |
      */
-    'token_table'    => 'mobile_verification_tokens',
+    'model'          => App\Models\User::class,
+
+    /*
+     |--------------------------------------------------------------------------
+     | Default OTP Tokens Table Name
+     |--------------------------------------------------------------------------
+     |
+     | Here you should specify name of your OTP tokens table in database.
+     | This table will held all information about created OTP tokens for users.
+     |
+     */
+    'token_table'    => 'otp_tokens',
 
     /*
      |--------------------------------------------------------------------------
      | Verification Token Length
      |--------------------------------------------------------------------------
      |
-     | Here you can specify length of verification tokens which will send to users.
+     | Here you can specify length of OTP tokens which will send to users.
      |
      */
-    'token_length'   => 5,
+    'token_length'   => env('OTP_TOKEN_LENGTH', 5),
 
     /*
      |--------------------------------------------------------------------------
      | Verification Token Lifetime
      |--------------------------------------------------------------------------
      |
-     | Here you can specify lifetime of verification tokens (in minutes) which will send to users.
+     | Here you can specify lifetime of OTP tokens (in minutes) which will send to users.
      |
      */
-    'token_lifetime' => 5,
+    'token_lifetime' => env('OTP_TOKEN_LENGTH', 5),
+
+    /*
+   |--------------------------------------------------------------------------
+   | OTP Prefix
+   |--------------------------------------------------------------------------
+   |
+   | Here you can specify prefix of OTP tokens for adding to cache.
+   |
+   */
+    'prefix'         => 'otp_',
 
     /*
      |--------------------------------------------------------------------------
@@ -76,5 +98,14 @@ return [
     | Supported drivers: "cache", "database"
     |
     */
-    'token_storage'  => 'cache',
+    'token_storage'  => env('OTP_TOKEN_STORAGE', 'cache'),
+
+    /*
+    |--------------------------------------------------------------------------
+    |  Default Notification Channel
+    |--------------------------------------------------------------------------
+    |
+    |
+    */
+    'channel'        => 'otp_sms',
 ];

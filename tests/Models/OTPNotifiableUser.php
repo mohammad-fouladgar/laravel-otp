@@ -7,10 +7,14 @@ use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 
-class OTPAbleUser extends Model implements OTPNotifiable
+class OTPNotifiableUser extends Model implements OTPNotifiable
 {
     use Notifiable;
     use HasOTPNotify;
 
+    public $timestamps = false;
+
     public $mobile = '09389599530';
+
+    protected $table = 'users';
 }

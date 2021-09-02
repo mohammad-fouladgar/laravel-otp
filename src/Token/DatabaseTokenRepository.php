@@ -21,28 +21,15 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     protected string $table;
 
     public function __construct(
+        ConnectionInterface $connection,
         int $expires,
         int $tokenLength,
-        string $table,
-        ConnectionInterface $connection
+        string $table
     ) {
         parent::__construct($expires, $tokenLength);
 
         $this->table      = $table;
         $this->connection = $connection;
-    }
-
-    public function create(OTPNotifiable $user): string
-    {
-        $mobile = $user->getMobileForOTPNotification();
-
-        $this->deleteExisting($user);
-
-        $token = $this->createNewToken();
-
-        $this->save($mobile, $token);
-
-        return $token;
     }
 
     public function deleteExisting(OTPNotifiable $user): void
@@ -52,10 +39,10 @@ class DatabaseTokenRepository extends AbstractTokenRepository
 
     public function exists(OTPNotifiable $user, string $token): bool
     {
-        $record = (array)$this->getTable()
-                              ->where('mobile', $user->getMobileForOTPNotification())
-                              ->where('token', $token)
-                              ->first();
+        $record = (array) $this->getTable()
+                               ->where('mobile', $user->getMobileForOTPNotification())
+                               ->where('token', $token)
+                               ->first();
 
         return $record && !$this->tokenExpired($record['expires_at']);
     }

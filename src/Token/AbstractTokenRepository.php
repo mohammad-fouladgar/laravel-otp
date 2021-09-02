@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP\Token;
 
+use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Illuminate\Support\Carbon;
 
 abstract class AbstractTokenRepository implements TokenRepositoryInterface
@@ -17,8 +18,21 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
 
     public function __construct(int $expires, int $tokenLength)
     {
-        $this->expires = $expires;
+        $this->expires     = $expires;
         $this->tokenLength = $tokenLength;
+    }
+
+    public function create(OTPNotifiable $user): string
+    {
+        $mobile = $user->getMobileForOTPNotification();
+
+        $this->deleteExisting($user);
+
+        $token = $this->createNewToken();
+
+        $this->save($mobile, $token);
+
+        return $token;
     }
 
     /**
