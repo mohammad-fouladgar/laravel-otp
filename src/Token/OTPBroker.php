@@ -7,7 +7,9 @@ namespace Fouladgar\OTP\Token;
 use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
 use Fouladgar\OTP\NotifiableUserRepository;
+use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
 use Illuminate\Support\Arr;
+use Throwable;
 
 class OTPBroker
 {
@@ -38,6 +40,9 @@ class OTPBroker
         return $user;
     }
 
+    /**
+     * @throws InvalidOTPTokenException|Throwable
+     */
     public function validate(string $mobile, string $token): OTPNotifiable
     {
         /** @var OTPNotifiable $user */
@@ -45,7 +50,7 @@ class OTPBroker
 
         throw_unless($this->tokenExists($user, $token), InvalidOTPTokenException::class);
 
-        $this->tokenRepository->deleteExisting($user);
+        $this->revoke($user);
 
         return $user;
     }
@@ -55,6 +60,11 @@ class OTPBroker
         $this->channel = is_array($channel) ? $channel : func_get_args();
 
         return $this;
+    }
+
+    public function revoke(OTPNotifiableUser $user): bool
+    {
+        return $this->tokenRepository->deleteExisting($user);
     }
 
     private function findOrCreateUser(string $mobile): OTPNotifiable
@@ -74,27 +84,8 @@ class OTPBroker
         return is_array($channel) ? $channel : Arr::wrap($channel);
     }
 
-    //    public function generate()
-//    {
-//    }
-//
-//    public function expiry(): self
-//    {
-//        return $this;
-//    }
-//
-//    public function length(): self
-//    {
-//        return $this;
-//    }
-
     private function tokenExists(OTPNotifiable $user, string $token): bool
     {
         return $this->tokenRepository->exists($user, $token);
     }
-//
-//    public function revoke()
-//    {
-//    }
-
 }

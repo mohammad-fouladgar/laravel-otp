@@ -41,6 +41,7 @@ class TestCase extends BaseTestCase
     protected function getEnvironmentSetUp($app): void
     {
         $app['config']->set('otp.model', OTPNotifiableUser::class);
+        $app['config']->set('otp.sms_client', SampleSMSClient::class);
     }
 
     /**

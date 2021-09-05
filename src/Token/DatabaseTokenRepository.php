@@ -32,9 +32,9 @@ class DatabaseTokenRepository extends AbstractTokenRepository
         $this->connection = $connection;
     }
 
-    public function deleteExisting(OTPNotifiable $user): void
+    public function deleteExisting(OTPNotifiable $user): bool
     {
-        optional($this->getTable()->where('mobile', $user->getMobileForOTPNotification()))->delete();
+        return optional($this->getTable()->where('mobile', $user->getMobileForOTPNotification()))->delete();
     }
 
     public function exists(OTPNotifiable $user, string $token): bool

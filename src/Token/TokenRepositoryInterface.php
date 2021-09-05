@@ -19,5 +19,5 @@ interface TokenRepositoryInterface
     /**
      * Delete all existing tokens from the storage.
      */
-    public function deleteExisting(OTPNotifiable $user): void;
+    public function deleteExisting(OTPNotifiable $user): bool;
 }

@@ -2,7 +2,8 @@
 
 namespace Fouladgar\OTP;
 
-use Fouladgar\OTP\Notifications\Channels\OTPChannel;
+use Fouladgar\OTP\Contracts\SMSClient;
+use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
 use Fouladgar\OTP\Token\CacheTokenRepository;
 use Fouladgar\OTP\Token\DatabaseTokenRepository;
 use Fouladgar\OTP\Token\TokenRepositoryInterface;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Database\ConnectionInterface;
+use Throwable;
 
 class ServiceProvider extends BaseServiceProvider
 {
@@ -23,7 +25,7 @@ class ServiceProvider extends BaseServiceProvider
             function (ChannelManager $service) {
                 $service->extend(
                     'otp_sms',
-                    fn($app) => new OTPChannel() // todo:new sms client service
+                    fn($app) => new OTPSMSChannel($app->make(config('otp.sms_client')))
                 );
             }
         );
@@ -103,5 +105,16 @@ class ServiceProvider extends BaseServiceProvider
                     throw new \Exception('The Token storage is not supported.');
             }
         });
+
+        $this->app->singleton(
+            SMSClient::class,
+            static function ($app) {
+                try {
+                    return $app->make(config('otp.sms_client'));
+                } catch (Throwable $e) {
+                    throw new SMSClientNotFoundException();
+                }
+            }
+        );
     }
 }

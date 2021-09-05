@@ -21,9 +21,9 @@ class CacheTokenRepository extends AbstractTokenRepository
         $this->prefix = $prefix;
     }
 
-    public function deleteExisting(OTPNotifiable $user): void
+    public function deleteExisting(OTPNotifiable $user): bool
     {
-        $this->cache->forget($this->getSignatureKey($user->getMobileForOTPNotification()));
+        return $this->cache->forget($this->getSignatureKey($user->getMobileForOTPNotification()));
     }
 
     public function exists(OTPNotifiable $user, string $token): bool

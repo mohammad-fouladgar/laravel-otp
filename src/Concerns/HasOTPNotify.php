@@ -20,7 +20,7 @@ trait HasOTPNotify
 
     public function getMobileForOTPNotification(): string
     {
-        return $this->mobile;
+        return $this->{$this->getMobileField()};
     }
 
     private function appendMobileFieldToFillableAttributes(): void
@@ -30,6 +30,11 @@ trait HasOTPNotify
         if (!in_array($mobileFiled, $this->fillable, true)) {
             $this->fillable = array_merge($this->fillable, [$mobileFiled]);
         }
+    }
+
+    public function routeNotificationForOTP(): string
+    {
+        return $this->{$this->getMobileField()};
     }
 
     private function getMobileField(): string

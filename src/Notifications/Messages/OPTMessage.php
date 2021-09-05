@@ -15,7 +15,6 @@ class OPTMessage
         return $this;
     }
 
-
     public function to(string $to): self
     {
         $this->to = $to;
@@ -23,13 +22,8 @@ class OPTMessage
         return $this;
     }
 
-    public function getContent()
+    public function getPayload()
     {
-        return $this->content;
-    }
-
-    public function getTo()
-    {
-        return $this->to;
+        return (new MessagePayload($this->to, $this->content));
     }
 }

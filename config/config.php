@@ -102,10 +102,10 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    |  Default Notification Channel
+    |  Default SMS Notification Channel
     |--------------------------------------------------------------------------
     |
     |
     */
-    'channel'        => 'otp_sms',
+    'channel'        => \Fouladgar\OTP\Notifications\Channels\OTPSMSChannel::class,
 ];

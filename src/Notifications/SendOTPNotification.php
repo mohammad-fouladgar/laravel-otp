@@ -2,7 +2,6 @@
 
 namespace Fouladgar\OTP\Notifications;
 
-use Fouladgar\OTP\Notifications\Channels\OTPChannel;
 use Fouladgar\OTP\Notifications\Messages\OPTMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -12,7 +11,6 @@ class SendOTPNotification extends Notification
     private string $token;
 
     private array $channels;
-
 
     public function __construct(string $token, array $channels)
     {
@@ -32,9 +30,8 @@ class SendOTPNotification extends Notification
         return $this->channels;
     }
 
-    public function toSms($notifiable)
+    public function toSMS($notifiable)
     {
-        dump('sms');
         return (new OPTMessage())
             ->to($notifiable->getMobileForOTPNotification())
             ->content('Your OTP code is: '.$this->token); // todo: get from lang file
