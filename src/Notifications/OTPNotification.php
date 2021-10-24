@@ -54,7 +54,7 @@ class OTPNotification extends Notification
         return $this->channels;
     }
 
-    public function toSMS(OTPNotifiable $notifiable)
+    public function toSMS($notifiable)
     {
         if (static::$toSMSCallback) {
             return call_user_func(static::$toSMSCallback, $notifiable, $this->token);
@@ -63,7 +63,7 @@ class OTPNotification extends Notification
         return $this->buildSMSMessage($notifiable);
     }
 
-    public function toMail(OTPNotifiable $notifiable)
+    public function toMail($notifiable)
     {
         if (static::$toMailCallback) {
             return call_user_func(static::$toMailCallback, $notifiable, $this->token);
@@ -72,7 +72,7 @@ class OTPNotification extends Notification
         return $this->buildMailMessage();
     }
 
-    protected function buildSMSMessage(OTPNotifiable $notifiable): OTPMessage
+    protected function buildSMSMessage($notifiable): OTPMessage
     {
         return (new OTPMessage())
             ->to($notifiable->getMobileForOTPNotification())
