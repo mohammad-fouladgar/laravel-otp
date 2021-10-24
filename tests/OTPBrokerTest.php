@@ -55,6 +55,7 @@ class OTPBrokerTest extends TestCase
         $user = OTP()->send(self::mobile);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
+        dump($this->app->version(), version_compare($this->app->version(), '6'));
         if (1 == version_compare($this->app->version(), '6')) {
             Notification::assertSentTo(
                 $user,
