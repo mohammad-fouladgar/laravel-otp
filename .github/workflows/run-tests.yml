@@ -9,13 +9,15 @@ jobs:
     strategy:
       matrix:
         php: [8.0, 7.4, 7.3]
-        laravel: [8.*, 7.*]
+        laravel: [8.*, 7.*, 6.*]
         dependency-version: [prefer-lowest, prefer-stable]
         include:
               - laravel: 8.*
                 testbench: ^6.3
               - laravel: 7.*
                 testbench: ^5.8
+              - laravel: 6.*
+                testbench: ^4.9
     steps:
     - uses: actions/checkout@v1
 
