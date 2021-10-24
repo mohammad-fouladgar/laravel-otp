@@ -10,14 +10,8 @@ use Illuminate\Database\Query\Builder;
 
 class DatabaseTokenRepository extends AbstractTokenRepository
 {
-    /**
-     * The database connection instance.
-     */
     protected ConnectionInterface $connection;
 
-    /**
-     * The token database table.
-     */
     protected string $table;
 
     public function __construct(
@@ -28,13 +22,13 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     ) {
         parent::__construct($expires, $tokenLength);
 
-        $this->table      = $table;
+        $this->table = $table;
         $this->connection = $connection;
     }
 
     public function deleteExisting(OTPNotifiable $user): bool
     {
-        return optional($this->getTable()->where('mobile', $user->getMobileForOTPNotification()))->delete();
+        return (bool) optional($this->getTable()->where('mobile', $user->getMobileForOTPNotification()))->delete();
     }
 
     public function exists(OTPNotifiable $user, string $token): bool
@@ -47,9 +41,6 @@ class DatabaseTokenRepository extends AbstractTokenRepository
         return $record && !$this->tokenExpired($record['expires_at']);
     }
 
-    /**
-     * Begin a new database query against the table.
-     */
     protected function getTable(): Builder
     {
         return $this->connection->table($this->table);

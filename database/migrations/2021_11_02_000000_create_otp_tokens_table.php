@@ -4,11 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateOTPTable extends Migration
+class CreateOTPTokensTable extends Migration
 {
-    private string $userTable;
-
     private string $tokenTable;
+
+    private string $userTable;
 
     private string $mobileColumn;
 
@@ -16,13 +16,11 @@ class CreateOTPTable extends Migration
     {
         $this->userTable    = config('otp.user_table', 'users');
         $this->mobileColumn = config('otp.mobile_column', 'mobile');
-        $this->tokenTable   = config('otp.token_table', 'mobile_verification_tokens');
+        $this->tokenTable   = config('otp.token_table', 'otp_tokens');
     }
 
     public function up(): void
     {
-        $this->tokenTableUp();
-
         if (!Schema::hasColumn($this->userTable, $this->mobileColumn)) {
             Schema::table(
                 $this->userTable,
@@ -32,30 +30,6 @@ class CreateOTPTable extends Migration
             );
         }
 
-        if (!Schema::hasColumn($this->userTable, 'mobile_verified_at')) {
-            Schema::table(
-                $this->userTable,
-                function (Blueprint $table): void {
-                    $table->timestamp('mobile_verified_at')->nullable()->after($this->mobileColumn);
-                }
-            );
-        }
-    }
-
-    public function down(): void
-    {
-        $this->tokenTableDown();
-
-        Schema::table(
-            $this->userTable,
-            static function (Blueprint $table): void {
-                $table->dropColumn('mobile_verified_at');
-            }
-        );
-    }
-
-    private function tokenTableUp(): void
-    {
         if (config('otp.token_storage') === 'cache') {
             return;
         }
@@ -73,12 +47,11 @@ class CreateOTPTable extends Migration
         );
     }
 
-    private function tokenTableDown(): void
+    public function down(): void
     {
         if (config('otp.token_storage') === 'cache') {
             return;
         }
-
         Schema::drop($this->tokenTable);
     }
 }

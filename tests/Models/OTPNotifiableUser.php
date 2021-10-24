@@ -14,7 +14,5 @@ class OTPNotifiableUser extends Model implements OTPNotifiable
 
     public $timestamps = false;
 
-    public $mobile = '09389599530';
-
     protected $table = 'users';
 }

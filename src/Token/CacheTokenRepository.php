@@ -36,7 +36,8 @@ class CacheTokenRepository extends AbstractTokenRepository
 
     protected function save(string $mobile, string $token): bool
     {
-        return $this->cache->add($this->getSignatureKey($mobile), $this->getPayload($mobile, $token));
+        return $this->cache->add($this->getSignatureKey($mobile), $this->getPayload($mobile, $token),
+            now()->addMinutes($this->expires));
     }
 
     protected function getSignatureKey($mobile): string

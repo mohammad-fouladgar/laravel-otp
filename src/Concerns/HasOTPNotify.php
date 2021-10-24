@@ -2,7 +2,7 @@
 
 namespace Fouladgar\OTP\Concerns;
 
-use Fouladgar\OTP\Notifications\SendOTPNotification;
+use Fouladgar\OTP\Notifications\OTPNotification;
 
 trait HasOTPNotify
 {
@@ -15,7 +15,7 @@ trait HasOTPNotify
 
     public function sendOTPNotification(string $token, array $channel): void
     {
-        $this->notify(new SendOTPNotification($token, $channel));
+        $this->notify(new OTPNotification($token, $channel));
     }
 
     public function getMobileForOTPNotification(): string

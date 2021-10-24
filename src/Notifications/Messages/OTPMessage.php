@@ -2,7 +2,7 @@
 
 namespace Fouladgar\OTP\Notifications\Messages;
 
-class OPTMessage
+class OTPMessage
 {
     private string $content;
 
@@ -22,7 +22,7 @@ class OPTMessage
         return $this;
     }
 
-    public function getPayload()
+    public function getPayload(): MessagePayload
     {
         return (new MessagePayload($this->to, $this->content));
     }

@@ -2,8 +2,9 @@
 
 namespace Fouladgar\OTP\Notifications\Channels;
 
+use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Contracts\SMSClient;
-use Fouladgar\OTP\Notifications\Messages\OPTMessage;
+use Fouladgar\OTP\Notifications\Messages\OTPMessage;
 use Illuminate\Notifications\Notification;
 
 class OTPSMSChannel
@@ -15,13 +16,13 @@ class OTPSMSChannel
         $this->SMSClient = $SMSClient;
     }
 
-    public function send($notifiable, Notification $notification)
+    public function send(OTPNotifiable $notifiable, Notification $notification)
     {
         if (!$notifiable->routeNotificationFor('otp', $notification)) {
             return;
         }
 
-        /** @var OPTMessage $message */
+        /** @var OTPMessage $message */
         $message = $notification->toSMS($notifiable);
 
         return $this->SMSClient->sendMessage($message->getPayload());

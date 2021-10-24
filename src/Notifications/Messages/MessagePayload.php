@@ -14,12 +14,12 @@ class MessagePayload
         $this->content = $content;
     }
 
-    public function to()
+    public function to(): string
     {
         return $this->to;
     }
 
-    public function content()
+    public function content(): string
     {
         return $this->content;
     }

@@ -37,7 +37,10 @@
   "autoload": {
     "psr-4": {
       "Fouladgar\\OTP\\": "src/"
-    }
+    },
+    "files": [
+      "src/helpers.php"
+    ]
   },
   "autoload-dev": {
     "psr-4": {

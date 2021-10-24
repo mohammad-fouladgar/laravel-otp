@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Fouladgar\OTP;
 
+use Exception;
 use Fouladgar\OTP\Contracts\SMSClient;
+use Fouladgar\OTP\Exceptions\SMSClientNotFoundException;
 use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
 use Fouladgar\OTP\Token\CacheTokenRepository;
 use Fouladgar\OTP\Token\DatabaseTokenRepository;
@@ -16,9 +20,6 @@ use Throwable;
 
 class ServiceProvider extends BaseServiceProvider
 {
-    /**
-     * Perform post-registration booting of services.
-     */
     public function boot(): void
     {
         Notification::resolved(
@@ -35,9 +36,6 @@ class ServiceProvider extends BaseServiceProvider
         $this->registerPublishing();
     }
 
-    /**
-     * Register any package services.
-     */
     public function register(): void
     {
         $this->mergeConfigFrom($this->getConfig(), 'otp');
@@ -45,9 +43,6 @@ class ServiceProvider extends BaseServiceProvider
         $this->registerBindings();
     }
 
-    /**
-     * Load and register package assets.
-     */
     protected function loadAssetsFrom(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
@@ -55,9 +50,6 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'OTP');
     }
 
-    /**
-     * Register the package's publishable resources.
-     */
     protected function registerPublishing(): void
     {
         $this->publishes([$this->getConfig() => config_path('otp.php')], 'config');
@@ -72,17 +64,11 @@ class ServiceProvider extends BaseServiceProvider
         $this->publishes([__DIR__.'/../database/migrations' => database_path('migrations')], 'migrations');
     }
 
-    /**
-     * Get the config file path.
-     */
     protected function getConfig(): string
     {
         return __DIR__.'/../config/config.php';
     }
 
-    /**
-     * Register any package bindings.
-     */
     protected function registerBindings(): void
     {
         $this->app->bind(TokenRepositoryInterface::class, function ($app) {
@@ -102,7 +88,7 @@ class ServiceProvider extends BaseServiceProvider
                         config('otp.token_table'),
                     );
                 default:
-                    throw new \Exception('The Token storage is not supported.');
+                    throw new Exception('The Token storage is not supported.');
             }
         });
 

@@ -9,7 +9,6 @@ class SampleSMSClient implements SMSClient
 {
     public function sendMessage(MessagePayload $payload)
     {
-        dump($payload);
-        // $this->SMSService->send($payload->to(),$payload->content());
+        // dump($payload->to(),$payload->content());
     }
 }

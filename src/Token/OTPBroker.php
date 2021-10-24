@@ -6,6 +6,7 @@ namespace Fouladgar\OTP\Token;
 
 use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
+use Fouladgar\OTP\Exceptions\UserNotFoundByMobileException;
 use Fouladgar\OTP\NotifiableUserRepository;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
 use Illuminate\Support\Arr;
@@ -19,6 +20,8 @@ class OTPBroker
 
     private array $channel;
 
+    private ?string $token = null;
+
     public function __construct(TokenRepositoryInterface $tokenRepository, NotifiableUserRepository $userRepository)
     {
         $this->tokenRepository = $tokenRepository;
@@ -29,15 +32,21 @@ class OTPBroker
 
     public function send(string $mobile): OTPNotifiable
     {
-        /** @var OTPNotifiable $user */
         $user = $this->findOrCreateUser($mobile);
 
+        $this->token = $this->tokenRepository->create($user);
+
         $user->sendOTPNotification(
-            $this->tokenRepository->create($user),
+            $this->token,
             $this->channel
         );
 
         return $user;
+    }
+
+    public function getToken(): ?string
+    {
+        return $this->token;
     }
 
     /**
@@ -45,8 +54,9 @@ class OTPBroker
      */
     public function validate(string $mobile, string $token): OTPNotifiable
     {
-        /** @var OTPNotifiable $user */
         $user = $this->findUserByMobile($mobile);
+
+        throw_unless($user, UserNotFoundByMobileException::class);
 
         throw_unless($this->tokenExists($user, $token), InvalidOTPTokenException::class);
 

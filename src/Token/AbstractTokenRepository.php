@@ -36,16 +36,6 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
     }
 
     /**
-     * Set Expires token.
-     */
-    public function setExpires(int $expires): self
-    {
-        $this->expires = $expires;
-
-        return $this;
-    }
-
-    /**
      * Create a new token for user.
      */
     protected function createNewToken(): string
