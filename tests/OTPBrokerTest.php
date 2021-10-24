@@ -57,7 +57,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            function ($notification, $channels) {
+            function (OTPNotification $notification, $channels) {
                 return $channels[0] == config('otp.channel');
             }
         );
