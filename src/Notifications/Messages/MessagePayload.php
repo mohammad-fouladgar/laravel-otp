@@ -4,9 +4,15 @@ namespace Fouladgar\OTP\Notifications\Messages;
 
 class MessagePayload
 {
-    private string $to;
+    /**
+     * @var string
+     */
+    private $to;
 
-    private string $content;
+    /**
+     * @var string
+     */
+    private $content;
 
     public function __construct(string $to, string $content)
     {

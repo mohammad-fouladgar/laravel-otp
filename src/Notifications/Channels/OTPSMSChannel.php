@@ -9,7 +9,10 @@ use Illuminate\Notifications\Notification;
 
 class OTPSMSChannel
 {
-    protected SMSClient $SMSClient;
+    /**
+     * @var SMSClient
+     */
+    protected $SMSClient;
 
     public function __construct(SMSClient $SMSClient)
     {

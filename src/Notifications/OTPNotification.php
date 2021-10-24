@@ -13,13 +13,25 @@ use Illuminate\Support\Facades\Lang;
 
 class OTPNotification extends Notification
 {
-    public static ?Closure $toMailCallback = null;
+    /**
+     * @var Closure|null
+     */
+    public static $toMailCallback = null;
 
-    public static ?Closure $toSMSCallback = null;
+    /**
+     * @var Closure|null
+     */
+    public static $toSMSCallback = null;
 
-    private string $token;
+    /**
+     * @var string
+     */
+    private $token;
 
-    private array $channels;
+    /**
+     * @var array
+     */
+    private $channels;
 
     public function __construct(string $token, array $channels)
     {
@@ -37,14 +49,7 @@ class OTPNotification extends Notification
         static::$toSMSCallback = $callback;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @param  mixed  $notifiable
-     *
-     * @return array
-     */
-    public function via($notifiable)
+    public function via($notifiable): array
     {
         return $this->channels;
     }

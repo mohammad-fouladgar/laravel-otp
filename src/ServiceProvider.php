@@ -26,7 +26,9 @@ class ServiceProvider extends BaseServiceProvider
             function (ChannelManager $service) {
                 $service->extend(
                     'otp_sms',
-                    fn($app) => new OTPSMSChannel($app->make(config('otp.sms_client')))
+                    function ($app) {
+                        return new OTPSMSChannel($app->make(config('otp.sms_client')));
+                    }
                 );
             }
         );

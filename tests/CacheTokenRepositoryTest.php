@@ -8,9 +8,15 @@ use Illuminate\Support\Facades\Cache;
 
 class CacheTokenRepositoryTest extends TestCase
 {
-    protected TokenRepositoryInterface $repository;
+    /**
+     * @var TokenRepositoryInterface|mixed
+     */
+    protected $repository;
 
-    protected OTPNotifiableUser $user;
+    /**
+     * @var OTPNotifiableUser
+     */
+    protected $user;
 
     public function setUp(): void
     {

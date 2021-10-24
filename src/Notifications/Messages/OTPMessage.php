@@ -4,9 +4,15 @@ namespace Fouladgar\OTP\Notifications\Messages;
 
 class OTPMessage
 {
-    private string $content;
+    /**
+     * @var
+     */
+    private $content;
 
-    private string $to;
+    /**
+     * @var
+     */
+    private $to;
 
     public function content(string $content): self
     {

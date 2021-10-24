@@ -8,9 +8,15 @@ use Illuminate\Support\Str;
 
 class DatabaseTokenRepositoryTest extends TestCase
 {
-    protected TokenRepositoryInterface $repository;
+    /**
+     * @var TokenRepositoryInterface|mixed
+     */
+    protected $repository;
 
-    protected OTPNotifiableUser $user;
+    /**
+     * @var OTPNotifiableUser
+     */
+    protected $user;
 
     public function setUp(): void
     {

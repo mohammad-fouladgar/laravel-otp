@@ -10,11 +10,14 @@ use Illuminate\Support\Carbon;
 abstract class AbstractTokenRepository implements TokenRepositoryInterface
 {
     /**
-     * The number of seconds a token should last.
+     * @var int
      */
-    protected int $expires;
+    protected $expires;
 
-    protected int $tokenLength;
+    /**
+     * @var int
+     */
+    protected $tokenLength;
 
     public function __construct(int $expires, int $tokenLength)
     {
@@ -35,25 +38,16 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
         return $token;
     }
 
-    /**
-     * Create a new token for user.
-     */
     protected function createNewToken(): string
     {
         return (string) random_int(10 ** ($this->tokenLength - 1), (10 ** $this->tokenLength) - 1);
     }
 
-    /**
-     * Determine if the token has expired.
-     */
     protected function tokenExpired(string $expiresAt): bool
     {
         return Carbon::parse($expiresAt)->addMinutes($this->expires)->isPast();
     }
 
-    /**
-     * Build the record payload for the table.
-     */
     protected function getPayload(string $mobile, string $token): array
     {
         return ['mobile' => $mobile, 'token' => $token];

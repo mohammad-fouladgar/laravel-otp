@@ -57,7 +57,9 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+            function (OTPNotification $notification, $channels) {
+                return $channels[0] == config('otp.channel');
+            }
         );
     }
 
@@ -74,7 +76,9 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == $useChannels
+            function (OTPNotification $notification, $channels) use ($useChannels) {
+                return $channels == $useChannels;
+            }
         );
     }
 
@@ -90,7 +94,9 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
+            function (OTPNotification $notification, $channels) {
+                return $channels == ['otp_sms'];
+            }
         );
     }
 
@@ -106,7 +112,9 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+            function (OTPNotification $notification, $channels) {
+                return $channels == [CustomOTPChannel::class];
+            }
         );
     }
 

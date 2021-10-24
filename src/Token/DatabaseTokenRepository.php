@@ -10,9 +10,15 @@ use Illuminate\Database\Query\Builder;
 
 class DatabaseTokenRepository extends AbstractTokenRepository
 {
-    protected ConnectionInterface $connection;
+    /**
+     * @var ConnectionInterface
+     */
+    protected $connection;
 
-    protected string $table;
+    /**
+     * @var string
+     */
+    protected $table;
 
     public function __construct(
         ConnectionInterface $connection,
@@ -22,7 +28,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     ) {
         parent::__construct($expires, $tokenLength);
 
-        $this->table = $table;
+        $this->table      = $table;
         $this->connection = $connection;
     }
 

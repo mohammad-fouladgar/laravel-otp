@@ -6,9 +6,15 @@ use Fouladgar\OTP\Contracts\OTPNotifiable;
 
 class NotifiableUserRepository
 {
-    private OTPNotifiable $model;
+    /**
+     * @var OTPNotifiable
+     */
+    private $model;
 
-    private string $mobileColumn;
+    /**
+     * @var string
+     */
+    private $mobileColumn;
 
     public function __construct()
     {

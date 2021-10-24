@@ -14,13 +14,25 @@ use Throwable;
 
 class OTPBroker
 {
-    private TokenRepositoryInterface $tokenRepository;
+    /**
+     * @var TokenRepositoryInterface
+     */
+    private $tokenRepository;
 
-    private NotifiableUserRepository $userRepository;
+    /**
+     * @var NotifiableUserRepository
+     */
+    private $userRepository;
 
-    private array $channel;
+    /**
+     * @var array
+     */
+    private $channel;
 
-    private ?string $token = null;
+    /**
+     * @var string|null
+     */
+    private $token = null;
 
     public function __construct(TokenRepositoryInterface $tokenRepository, NotifiableUserRepository $userRepository)
     {
@@ -87,7 +99,7 @@ class OTPBroker
         return $this->userRepository->findByMobile($mobile);
     }
 
-    private function getDefaultChannel()
+    private function getDefaultChannel(): array
     {
         $channel = config('otp.channel');
 

@@ -9,9 +9,15 @@ use Illuminate\Contracts\Cache\Repository as Cache;
 
 class CacheTokenRepository extends AbstractTokenRepository
 {
-    private Cache $cache;
+    /**
+     * @var Cache
+     */
+    private $cache;
 
-    private string $prefix;
+    /**
+     * @var string
+     */
+    private $prefix;
 
     public function __construct(Cache $cache, int $expires, int $tokenLength, string $prefix)
     {
