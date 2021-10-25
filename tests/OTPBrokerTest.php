@@ -15,7 +15,7 @@ class OTPBrokerTest extends TestCase
 {
     protected const mobile = '09389599530';
 
-    protected $versionApp;
+    protected $versionCompareApp;
 
     /**
      * @test
@@ -57,7 +57,8 @@ class OTPBrokerTest extends TestCase
         $user = OTP()->send(self::mobile);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
-        if (1 == $this->versionApp || 0 == $this->versionApp) {
+        dump($this->versionCompareApp, $this->app->version());
+        if ($this->versionCompareApp) {
             Notification::assertSentTo(
                 $user,
                 function (OTPNotification $notification, $channels) {
@@ -85,7 +86,7 @@ class OTPBrokerTest extends TestCase
         $user        = OTP(self::mobile, $useChannels);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
-        if (1 == $this->versionApp || 0 == $this->versionApp) {
+        if ($this->versionCompareApp) {
             Notification::assertSentTo(
                 $user,
                 function (OTPNotification $notification, $channels) use ($useChannels) {
@@ -112,7 +113,7 @@ class OTPBrokerTest extends TestCase
         $user = OTP()->channel('otp_sms')->send(self::mobile);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
-        if (1 == $this->versionApp || 0 == $this->versionApp) {
+        if ($this->versionCompareApp) {
             Notification::assertSentTo(
                 $user,
                 function (OTPNotification $notification, $channels) {
@@ -139,7 +140,7 @@ class OTPBrokerTest extends TestCase
         $user = OTP(self::mobile, [CustomOTPChannel::class]);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
-        if (1 == $this->versionApp || 0 == $this->versionApp) {
+        if ($this->versionCompareApp) {
             Notification::assertSentTo(
                 $user,
                 function (OTPNotification $notification, $channels) {
@@ -215,6 +216,6 @@ class OTPBrokerTest extends TestCase
     {
         parent::setUp();
 
-        $this->versionApp = version_compare($this->app->version(), '7');
+        $this->versionCompareApp = version_compare($this->app->version(), '7', '>=');
     }
 }
