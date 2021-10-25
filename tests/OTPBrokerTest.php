@@ -56,8 +56,6 @@ class OTPBrokerTest extends TestCase
 
         $user = OTP()->send(self::mobile);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
-
-        dump($this->versionCompareApp, $this->app->version());
         if ($this->versionCompareApp) {
             Notification::assertSentTo(
                 $user,
@@ -68,6 +66,7 @@ class OTPBrokerTest extends TestCase
         } else {
             Notification::assertSentTo(
                 $user,
+                OTPNotification::class,
                 function ($notification, $channels) {
                     return $channels[0] == config('otp.channel');
                 }
@@ -96,6 +95,7 @@ class OTPBrokerTest extends TestCase
         } else {
             Notification::assertSentTo(
                 $user,
+                OTPNotification::class,
                 function ($notification, $channels) use ($useChannels) {
                     return $channels == $useChannels;
                 }
@@ -123,6 +123,7 @@ class OTPBrokerTest extends TestCase
         } else {
             Notification::assertSentTo(
                 $user,
+                OTPNotification::class,
                 function ($notification, $channels) {
                     return $channels == ['otp_sms'];
                 }
@@ -150,6 +151,7 @@ class OTPBrokerTest extends TestCase
         } else {
             Notification::assertSentTo(
                 $user,
+                OTPNotification::class,
                 function ($notification, $channels) {
                     return $channels == [CustomOTPChannel::class];
                 }
