@@ -23,7 +23,7 @@ class NotifiableUserRepositoryTest extends TestCase
      */
     public function it_can_find_user_by_mobile_if_exists(): void
     {
-        $user       = factory(OTPNotifiableUser::class)->create();
+        $user = factory(OTPNotifiableUser::class)->create();
         $repository = new NotifiableUserRepository();
 
         $this->assertInstanceOf(OTPNotifiable::class, $repository->findByMobile($user->mobile));
@@ -44,12 +44,9 @@ class NotifiableUserRepositoryTest extends TestCase
      */
     public function it_can_find_user_by_mobile_if_exists_instead_creating(): void
     {
-        $user       = factory(OTPNotifiableUser::class)->create();
+        $user = factory(OTPNotifiableUser::class)->create();
         $repository = new NotifiableUserRepository();
 
         $this->assertInstanceOf(OTPNotifiable::class, $repository->findOrCreateByMobile($user->mobile));
     }
-
-
 }
-

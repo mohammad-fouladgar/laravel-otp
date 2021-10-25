@@ -14,4 +14,3 @@ class SMSClientNotFoundException extends Exception
         parent::__construct('SMS client is not specified in the config file.');
     }
 }
-

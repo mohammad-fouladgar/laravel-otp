@@ -20,7 +20,7 @@ class NotifiableUserRepository
     {
         $this->mobileColumn = config('otp.mobile_column');
 
-        $modelClass  = config('otp.model');
+        $modelClass = config('otp.model');
         $this->model = new $modelClass();
     }
 

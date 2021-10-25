@@ -13,7 +13,6 @@ class CreateUsersTestTable extends Migration
             $table->string('name')->nullable()->default(null);
             $table->string('mobile');
         });
-
     }
 
     public function down(): void

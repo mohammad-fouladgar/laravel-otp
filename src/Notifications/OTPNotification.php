@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Fouladgar\OTP\Notifications;
 
 use Closure;
-use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Notifications\Messages\OTPMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -35,7 +34,7 @@ class OTPNotification extends Notification
 
     public function __construct(string $token, array $channels)
     {
-        $this->token    = $token;
+        $this->token = $token;
         $this->channels = $channels;
     }
 

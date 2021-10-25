@@ -33,8 +33,8 @@ class CacheTokenRepositoryTest extends TestCase
      */
     public function it_can_create_a_token_successfully(): void
     {
-        $payload          = ['mobile' => $this->user->mobile];
-        $token            = $this->repository->create($this->user);
+        $payload = ['mobile' => $this->user->mobile];
+        $token = $this->repository->create($this->user);
         $payload['token'] = $token;
 
         $this->assertEquals(Cache::get($payload['mobile']), $payload);
@@ -70,7 +70,7 @@ class CacheTokenRepositoryTest extends TestCase
         config()->set('otp.token_lifetime', -5);
 
         $this->repository = $this->app->make(TokenRepositoryInterface::class);
-        $token            = $this->repository->create($this->user);
+        $token = $this->repository->create($this->user);
 
         $this->assertFalse($this->repository->exists($this->user, $token));
     }

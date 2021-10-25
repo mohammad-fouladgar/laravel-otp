@@ -23,7 +23,7 @@ class CacheTokenRepository extends AbstractTokenRepository
     {
         parent::__construct($expires, $tokenLength);
 
-        $this->cache  = $cache;
+        $this->cache = $cache;
         $this->prefix = $prefix;
     }
 
@@ -42,8 +42,11 @@ class CacheTokenRepository extends AbstractTokenRepository
 
     protected function save(string $mobile, string $token): bool
     {
-        return $this->cache->add($this->getSignatureKey($mobile), $this->getPayload($mobile, $token),
-            now()->addMinutes($this->expires));
+        return $this->cache->add(
+            $this->getSignatureKey($mobile),
+            $this->getPayload($mobile, $token),
+            now()->addMinutes($this->expires)
+        );
     }
 
     protected function getSignatureKey($mobile): string

@@ -15,11 +15,11 @@ class OTPSMSChannelTest extends TestCase
     /** @test */
     public function it_can_successfully_send_token(): void
     {
-        $notifiable     = m::mock(OTPNotifiableUser::class);
-        $notification   = m::mock(OTPNotification::class);
+        $notifiable = m::mock(OTPNotifiableUser::class);
+        $notification = m::mock(OTPNotification::class);
         $messagePayload = m::mock(MessagePayload::class);
-        $OTPMessage     = m::mock(OTPMessage::class);
-        $SMSClient      = m::mock(SMSClient::class);
+        $OTPMessage = m::mock(OTPMessage::class);
+        $SMSClient = m::mock(SMSClient::class);
 
         $OTPMessage->shouldReceive('getPayload')->andReturn($messagePayload);
         $notifiable->shouldReceive('routeNotificationFor')->with('otp', $notification)->andReturnTrue();
@@ -35,9 +35,9 @@ class OTPSMSChannelTest extends TestCase
     /** @test */
     public function it_does_not_work_when_there_is_no_otp_route_notification(): void
     {
-        $notifiable   = m::mock(OTPNotifiableUser::class);
+        $notifiable = m::mock(OTPNotifiableUser::class);
         $notification = m::mock(OTPNotification::class);
-        $SMSClient    = m::mock(SMSClient::class);
+        $SMSClient = m::mock(SMSClient::class);
 
         $notifiable->shouldReceive('routeNotificationFor')
                    ->with('otp', $notification)

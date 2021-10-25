@@ -37,7 +37,7 @@ class OTPBroker
     public function __construct(TokenRepositoryInterface $tokenRepository, NotifiableUserRepository $userRepository)
     {
         $this->tokenRepository = $tokenRepository;
-        $this->userRepository  = $userRepository;
+        $this->userRepository = $userRepository;
 
         $this->channel = $this->getDefaultChannel();
     }

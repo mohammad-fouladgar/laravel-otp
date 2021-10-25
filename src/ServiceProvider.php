@@ -11,11 +11,11 @@ use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
 use Fouladgar\OTP\Token\CacheTokenRepository;
 use Fouladgar\OTP\Token\DatabaseTokenRepository;
 use Fouladgar\OTP\Token\TokenRepositoryInterface;
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
+use Illuminate\Database\ConnectionInterface;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use Illuminate\Database\ConnectionInterface;
 use Throwable;
 
 class ServiceProvider extends BaseServiceProvider

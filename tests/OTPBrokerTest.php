@@ -28,7 +28,8 @@ class OTPBrokerTest extends TestCase
         $this->assertInstanceOf(OTPNotifiable::class, OTP()->send($user->mobile));
 
         Notification::assertSentTo(
-            $user, OTPNotification::class
+            $user,
+            OTPNotification::class
         );
     }
 
@@ -43,7 +44,8 @@ class OTPBrokerTest extends TestCase
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         Notification::assertSentTo(
-            $user, OTPNotification::class
+            $user,
+            OTPNotification::class
         );
     }
 
@@ -82,7 +84,7 @@ class OTPBrokerTest extends TestCase
         Notification::fake();
 
         $useChannels = [OTPSMSChannel::class, 'mail'];
-        $user        = OTP(self::mobile, $useChannels);
+        $user = OTP(self::mobile, $useChannels);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         if ($this->versionCompareApp) {

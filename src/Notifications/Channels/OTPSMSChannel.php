@@ -21,7 +21,7 @@ class OTPSMSChannel
 
     public function send(OTPNotifiable $notifiable, Notification $notification)
     {
-        if (!$notifiable->routeNotificationFor('otp', $notification)) {
+        if (! $notifiable->routeNotificationFor('otp', $notification)) {
             return;
         }
 

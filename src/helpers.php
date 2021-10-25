@@ -4,7 +4,7 @@ use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
 use Fouladgar\OTP\Token\OTPBroker;
 
-if (!function_exists('OTP')) {
+if (! function_exists('OTP')) {
     /**
      * @param  string|null  $mobile
      * @param  string|array|null  $token
