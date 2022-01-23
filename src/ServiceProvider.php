@@ -4,15 +4,11 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP;
 
-use Exception;
 use Fouladgar\OTP\Contracts\SMSClient;
+use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
 use Fouladgar\OTP\Exceptions\SMSClientNotFoundException;
 use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
-use Fouladgar\OTP\Token\CacheTokenRepository;
-use Fouladgar\OTP\Token\DatabaseTokenRepository;
-use Fouladgar\OTP\Token\TokenRepositoryInterface;
-use Illuminate\Contracts\Cache\Repository as CacheRepository;
-use Illuminate\Database\ConnectionInterface;
+use Fouladgar\OTP\Token\TokenRepositoryManager;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
@@ -73,25 +69,12 @@ class ServiceProvider extends BaseServiceProvider
 
     protected function registerBindings(): void
     {
-        $this->app->bind(TokenRepositoryInterface::class, function ($app) {
-            switch (config('otp.token_storage', 'cache')) {
-                case 'cache':
-                    return new CacheTokenRepository(
-                        $app->make(CacheRepository::class),
-                        config('otp.token_lifetime', 5),
-                        config('otp.token_length', 5),
-                        config('otp.prefix'),
-                    );
-                case 'database':
-                    return new DatabaseTokenRepository(
-                        $app->make(ConnectionInterface::class),
-                        config('otp.token_lifetime'),
-                        config('otp.token_length'),
-                        config('otp.token_table'),
-                    );
-                default:
-                    throw new Exception('The Token storage is not supported.');
-            }
+        $this->app->singleton('token.repository', function ($app) {
+            return new TokenRepositoryManager($app);
+        });
+
+        $this->app->singleton(TokenRepositoryInterface::class, function ($app) {
+            return $app['token.repository']->driver();
         });
 
         $this->app->singleton(

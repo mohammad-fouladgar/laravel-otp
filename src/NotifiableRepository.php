@@ -2,26 +2,26 @@
 
 namespace Fouladgar\OTP;
 
+use Fouladgar\OTP\Contracts\NotifiableRepositoryInterface;
 use Fouladgar\OTP\Contracts\OTPNotifiable;
 
-class NotifiableUserRepository
+class NotifiableRepository implements NotifiableRepositoryInterface
 {
     /**
      * @var OTPNotifiable
      */
-    private $model;
+    protected $model;
 
     /**
      * @var string
      */
-    private $mobileColumn;
+    protected $mobileColumn;
 
-    public function __construct()
+    public function __construct(OTPNotifiable $model)
     {
         $this->mobileColumn = config('otp.mobile_column');
 
-        $modelClass = config('otp.model');
-        $this->model = new $modelClass();
+        $this->model = $model;
     }
 
     public function findOrCreateByMobile(string $mobile): OTPNotifiable
@@ -32,5 +32,11 @@ class NotifiableUserRepository
     public function findByMobile(string $mobile): ?OTPNotifiable
     {
         return $this->model->where([$this->mobileColumn => $mobile])->first(['id', $this->mobileColumn]);
+    }
+
+
+    public function getModel(): OTPNotifiable
+    {
+        return $this->model;
     }
 }

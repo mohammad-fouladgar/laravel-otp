@@ -3,14 +3,43 @@
 return [
 
     /*
+    |--------------------------------------------------------------------------
+    | OTP Default Provider
+    |--------------------------------------------------------------------------
+    |
+    | This option controls the default otp "userProvider" for your application.
+    | You may change this option, but it's a perfect start fot most applications.
+    |
+    */
+    'default_provider' => 'users',
+
+    /*
      |--------------------------------------------------------------------------
-     | Default User Table Name
+     | User Providers
      |--------------------------------------------------------------------------
      |
-     | Here you should specify name of your users table in database.
+     | Here you should specify your user providers. This defines how the users are actually retrieved out of your
+     | database or other storage mechanisms used by this application to persist your user's data.
+     |
+     | Keep in mind, every model must be an instance of "Fouladgar\OTP\Contracts\OTPNotifiable" and also
+     | use this "Fouladgar\OTP\Concerns\HasOTPNotify" trait.
+     |
+     | You may also change the default repository and replace your own repository. But every repository must
+     | extend "Fouladgar\OTP\Contracts\NotifiableRepositoryInterface" abstract class.
      |
      */
-    'user_table'     => 'users',
+    'user_providers'   => [
+        'users' => [
+            'table'      => 'users',
+            'model'      => \App\Models\User::class, // if Laravel < 8, change it to \App\User::class
+            'repository' => \Fouladgar\OTP\NotifiableRepository::class,
+        ],
+
+//        'admins' => [
+//            'model'      => \App\Models\Admin::class,
+//            'repository' => \Fouladgar\OTP\NotifiableRepositoryInterface::class,
+//        ],
+    ],
 
     /*
      |--------------------------------------------------------------------------
@@ -21,19 +50,7 @@ return [
      | mobile number reside in.
      |
      */
-    'mobile_column'  => 'mobile',
-
-    /*
-     |--------------------------------------------------------------------------
-     | Default OTPNotifiable model
-     |--------------------------------------------------------------------------
-     |
-     | Here you should specify OTPNotifiable model. Keep in mind, this model must be
-     | an instance of `Fouladgar\OTP\Contracts\OTPNotifiable` and also
-     | use this `Fouladgar\OTP\Concerns\HasOTPNotify` trait.
-     |
-     */
-    'model'          => App\Models\User::class,
+    'mobile_column'    => 'mobile',
 
     /*
      |--------------------------------------------------------------------------
@@ -44,7 +61,7 @@ return [
      | This table will held all information about created OTP tokens for users.
      |
      */
-    'token_table'    => 'otp_tokens',
+    'token_table'      => 'otp_tokens',
 
     /*
      |--------------------------------------------------------------------------
@@ -54,7 +71,7 @@ return [
      | Here you can specify length of OTP tokens which will send to users.
      |
      */
-    'token_length'   => env('OTP_TOKEN_LENGTH', 5),
+    'token_length'     => env('OTP_TOKEN_LENGTH', 5),
 
     /*
      |--------------------------------------------------------------------------
@@ -64,7 +81,7 @@ return [
      | Here you can specify lifetime of OTP tokens (in minutes) which will send to users.
      |
      */
-    'token_lifetime' => env('OTP_TOKEN_LENGTH', 5),
+    'token_lifetime'   => env('OTP_TOKEN_LENGTH', 5),
 
     /*
    |--------------------------------------------------------------------------
@@ -74,7 +91,7 @@ return [
    | Here you can specify prefix of OTP tokens for adding to cache.
    |
    */
-    'prefix'         => 'otp_',
+    'prefix'           => 'otp_',
 
     /*
      |--------------------------------------------------------------------------
@@ -85,7 +102,7 @@ return [
      | responsible for sending SMS to users.
      |
      */
-    'sms_client'     => '',
+    'sms_client'       => '',
 
     /*
     |--------------------------------------------------------------------------
@@ -98,7 +115,7 @@ return [
     | Supported drivers: "cache", "database"
     |
     */
-    'token_storage'  => env('OTP_TOKEN_STORAGE', 'cache'),
+    'token_storage'    => env('OTP_TOKEN_STORAGE', 'cache'),
 
     /*
     |--------------------------------------------------------------------------
@@ -107,5 +124,5 @@ return [
     |
     |
     */
-    'channel'        => \Fouladgar\OTP\Notifications\Channels\OTPSMSChannel::class,
+    'channel'          => \Fouladgar\OTP\Notifications\Channels\OTPSMSChannel::class,
 ];

@@ -2,8 +2,9 @@
 
 namespace Fouladgar\OTP\Tests;
 
+use Carbon\Carbon;
+use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
-use Fouladgar\OTP\Token\TokenRepositoryInterface;
 use Illuminate\Support\Str;
 
 class DatabaseTokenRepositoryTest extends TestCase
@@ -39,8 +40,8 @@ class DatabaseTokenRepositoryTest extends TestCase
         $this->assertEquals(config('otp.token_length'), Str::length($token));
 
         $this->assertDatabaseHas('otp_tokens', [
-            'mobile' => $this->user->mobile,
-            'token' => $token,
+            'mobile'     => $this->user->mobile,
+            'token'      => $token,
             'expires_at' => (string) now()->addMinutes(config('otp.token_lifetime')),
         ]);
     }
@@ -54,7 +55,7 @@ class DatabaseTokenRepositoryTest extends TestCase
 
         $tokenRow = [
             'mobile' => $this->user->mobile,
-            'token' => $token,
+            'token'  => $token,
         ];
 
         $this->assertTrue($this->repository->deleteExisting($this->user));
@@ -76,11 +77,13 @@ class DatabaseTokenRepositoryTest extends TestCase
      */
     public function it_fails_when_token_is_exist_but_expired(): void
     {
-        config()->set('otp.token_lifetime', -5);
+        $testDate = Carbon::create(2022, 1, 20, 12);
+        Carbon::setTestNow($testDate);
 
         $this->repository = $this->app->make(TokenRepositoryInterface::class);
-        $token = $this->repository->create($this->user);
+        $token            = $this->repository->create($this->user);
 
+        Carbon::setTestNow();
         $this->assertFalse($this->repository->exists($this->user, $token));
     }
 

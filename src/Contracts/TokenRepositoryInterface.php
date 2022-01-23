@@ -1,8 +1,6 @@
 <?php
 
-namespace Fouladgar\OTP\Token;
-
-use Fouladgar\OTP\Contracts\OTPNotifiable;
+namespace Fouladgar\OTP\Contracts;
 
 interface TokenRepositoryInterface
 {

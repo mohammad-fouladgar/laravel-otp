@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Notification;
 
 class OTPBrokerTest extends TestCase
 {
-    protected const mobile = '09389599530';
+    protected const MOBILE = '09389599530';
 
     protected $versionCompareApp;
 
@@ -25,7 +25,7 @@ class OTPBrokerTest extends TestCase
         Notification::fake();
 
         $user = factory(OTPNotifiableUser::class)->create();
-        $this->assertInstanceOf(OTPNotifiable::class, OTP()->send($user->mobile));
+        $this->assertInstanceOf(OTPNotifiable::class, OTP()->send($user->mobile, true));
 
         Notification::assertSentTo(
             $user,
@@ -36,11 +36,20 @@ class OTPBrokerTest extends TestCase
     /**
      * @test
      */
+    public function it_can_throw_not_found_if_user_exists_is_true(): void
+    {
+        $this->expectException(UserNotFoundByMobileException::class);
+        OTP()->send(self::MOBILE, true);
+    }
+
+    /**
+     * @test
+     */
     public function it_can_send_token_to_user_that_does_not_exist(): void
     {
         Notification::fake();
 
-        $user = OTP(self::mobile);
+        $user = OTP(self::MOBILE);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         Notification::assertSentTo(
@@ -56,7 +65,7 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $user = OTP()->send(self::mobile);
+        $user = OTP()->send(self::MOBILE);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
         if ($this->versionCompareApp) {
             Notification::assertSentTo(
@@ -84,7 +93,7 @@ class OTPBrokerTest extends TestCase
         Notification::fake();
 
         $useChannels = [OTPSMSChannel::class, 'mail'];
-        $user = OTP(self::mobile, $useChannels);
+        $user        = OTP(self::MOBILE, $useChannels);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         if ($this->versionCompareApp) {
@@ -112,7 +121,7 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $user = OTP()->channel('otp_sms')->send(self::mobile);
+        $user = OTP()->channel('otp_sms')->send(self::MOBILE);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         if ($this->versionCompareApp) {
@@ -140,7 +149,7 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $user = OTP(self::mobile, [CustomOTPChannel::class]);
+        $user = OTP(self::MOBILE, [CustomOTPChannel::class]);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         if ($this->versionCompareApp) {
@@ -159,16 +168,6 @@ class OTPBrokerTest extends TestCase
                 }
             );
         }
-    }
-
-    /**
-     * @test
-     */
-    public function it_can_not_validate_a_token_when_user_not_found(): void
-    {
-        $this->expectException(UserNotFoundByMobileException::class);
-
-        OTP()->validate(self::mobile, '12345');
     }
 
     /**
@@ -206,6 +205,20 @@ class OTPBrokerTest extends TestCase
     /**
      * @test
      */
+    public function it_can_validate_a_valid_token_and_then_create_user(): void
+    {
+        $otp = OTP();
+
+        $otp->send(self::MOBILE, false);
+
+        $user = $otp->validate(self::MOBILE, Cache::get(self::MOBILE)['token'], true);
+
+        $this->assertInstanceOf(OTPNotifiable::class, $user);
+    }
+
+    /**
+     * @test
+     */
     public function it_can_revoke_a_token_successfully(): void
     {
         $user = factory(OTPNotifiableUser::class)->create();
@@ -216,10 +229,29 @@ class OTPBrokerTest extends TestCase
         $this->assertFalse(OTP()->revoke($user));
     }
 
+    /**
+     * @test
+     */
+    public function it_can_send_by_using_provider(): void
+    {
+        Notification::fake();
+
+        $user = OTP(self::MOBILE);
+
+        $this->assertInstanceOf(OTPNotifiable::class, OTP()->useProvider('users')->send($user->mobile));
+
+        Notification::assertSentTo(
+            $user,
+            OTPNotification::class
+        );
+    }
+
     public function setUp(): void
     {
         parent::setUp();
 
         $this->versionCompareApp = version_compare($this->app->version(), '7', '>=');
+
+        config()->set('otp.user_providers.users.model', \Fouladgar\OTP\Tests\Models\OTPNotifiableUser::class);
     }
 }

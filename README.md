@@ -19,7 +19,7 @@ If you discover any security related issues, please email fouladgar.dev@gmail.co
 
 ## License
 
-Laravel-Mobile-Verification is released under the MIT License. See the bundled
+Laravel-OTP is released under the MIT License. See the bundled
  [LICENSE](https://github.com/mohammad-fouladgar/laravel-mobile-verification/blob/master/LICENSE)
  file for details.
 

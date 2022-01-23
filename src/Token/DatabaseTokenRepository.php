@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP\Token;
 
+use Fouladgar\OTP\Contracts\AbstractTokenRepository;
 use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Query\Builder;

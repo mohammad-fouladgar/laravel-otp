@@ -13,7 +13,7 @@ use Mockery as m;
 class OTPSMSChannelTest extends TestCase
 {
     /** @test */
-    public function it_can_successfully_send_token(): void
+    public function it_can_send_token_successfully(): void
     {
         $notifiable = m::mock(OTPNotifiableUser::class);
         $notification = m::mock(OTPNotification::class);

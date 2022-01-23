@@ -2,9 +2,8 @@
 
 declare(strict_types=1);
 
-namespace Fouladgar\OTP\Token;
+namespace Fouladgar\OTP\Contracts;
 
-use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Illuminate\Support\Carbon;
 
 abstract class AbstractTokenRepository implements TokenRepositoryInterface
@@ -50,7 +49,7 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
 
     protected function getPayload(string $mobile, string $token): array
     {
-        return ['mobile' => $mobile, 'token' => $token];
+        return ['mobile' => $mobile, 'token' => $token , 'sent_at' => now()->toDateTimeString()];
     }
 
     /**

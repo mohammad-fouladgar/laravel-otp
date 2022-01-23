@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP\Token;
 
+use Fouladgar\OTP\Contracts\AbstractTokenRepository;
 use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Illuminate\Contracts\Cache\Repository as Cache;
 
@@ -23,7 +24,7 @@ class CacheTokenRepository extends AbstractTokenRepository
     {
         parent::__construct($expires, $tokenLength);
 
-        $this->cache = $cache;
+        $this->cache  = $cache;
         $this->prefix = $prefix;
     }
 

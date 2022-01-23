@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP\Token;
 
+use Exception;
+use Fouladgar\OTP\Contracts\NotifiableRepositoryInterface;
 use Fouladgar\OTP\Contracts\OTPNotifiable;
+use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
 use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
 use Fouladgar\OTP\Exceptions\UserNotFoundByMobileException;
-use Fouladgar\OTP\NotifiableUserRepository;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
+use Fouladgar\OTP\UserProviderResolver;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Throwable;
 
@@ -20,11 +24,6 @@ class OTPBroker
     private $tokenRepository;
 
     /**
-     * @var NotifiableUserRepository
-     */
-    private $userRepository;
-
-    /**
      * @var array
      */
     private $channel;
@@ -34,26 +33,57 @@ class OTPBroker
      */
     private $token = null;
 
-    public function __construct(TokenRepositoryInterface $tokenRepository, NotifiableUserRepository $userRepository)
-    {
-        $this->tokenRepository = $tokenRepository;
-        $this->userRepository = $userRepository;
+    /**
+     * @var UserProviderResolver
+     */
+    private $providerResolver;
 
-        $this->channel = $this->getDefaultChannel();
+    /** @var NotifiableRepositoryInterface */
+    private $userRepository;
+
+    public function __construct(TokenRepositoryInterface $tokenRepository, UserProviderResolver $providerResolver)
+    {
+        $this->tokenRepository  = $tokenRepository;
+        $this->providerResolver = $providerResolver;
+        $this->channel          = $this->getDefaultChannel();
+        $this->userRepository   = $this->resolveUserRepository();
     }
 
-    public function send(string $mobile): OTPNotifiable
+    /**
+     * @throws Throwable
+     */
+    public function send(string $mobile, bool $userExists = false): OTPNotifiable
     {
-        $user = $this->findOrCreateUser($mobile);
+        $user = $userExists ? $this->findUserByMobile($mobile) : null;
 
-        $this->token = $this->tokenRepository->create($user);
+        throw_if(!$user && $userExists, UserNotFoundByMobileException::class);
 
-        $user->sendOTPNotification(
+        $notifiable = $user ?? $this->makeNotifiable($mobile);
+
+        $this->token = $this->tokenRepository->create($notifiable);
+
+        $notifiable->sendOTPNotification(
             $this->token,
             $this->channel
         );
 
-        return $user;
+        return $notifiable;
+    }
+
+    /**
+     * @throws InvalidOTPTokenException|Throwable
+     */
+    public function validate(string $mobile, string $token, bool $create = true): OTPNotifiable
+    {
+        $notifiable = $this->makeNotifiable($mobile);
+
+        throw_unless($this->tokenExists($notifiable, $token), InvalidOTPTokenException::class);
+
+        $notifiable = $this->find($mobile, $create);
+
+        $this->revoke($notifiable);
+
+        return $notifiable;
     }
 
     public function getToken(): ?string
@@ -62,19 +92,13 @@ class OTPBroker
     }
 
     /**
-     * @throws InvalidOTPTokenException|Throwable
+     * @throws Exception
      */
-    public function validate(string $mobile, string $token): OTPNotifiable
+    public function useProvider(string $name = null): OTPBroker
     {
-        $user = $this->findUserByMobile($mobile);
+        $this->userRepository = $this->resolveUserRepository($name);
 
-        throw_unless($user, UserNotFoundByMobileException::class);
-
-        throw_unless($this->tokenExists($user, $token), InvalidOTPTokenException::class);
-
-        $this->revoke($user);
-
-        return $user;
+        return $this;
     }
 
     public function channel($channel = ['']): self
@@ -87,6 +111,21 @@ class OTPBroker
     public function revoke(OTPNotifiableUser $user): bool
     {
         return $this->tokenRepository->deleteExisting($user);
+    }
+
+    /**
+     * @throws \Exception
+     */
+    protected function resolveUserRepository(string $name = null): NotifiableRepositoryInterface
+    {
+        return $this->providerResolver->resolve($name);
+    }
+
+    private function find(string $mobile, bool $create = true): ?OTPNotifiable
+    {
+        return $create ?
+            $this->findOrCreateUser($mobile) :
+            $this->findUserByMobile($mobile);
     }
 
     private function findOrCreateUser(string $mobile): OTPNotifiable
@@ -109,5 +148,10 @@ class OTPBroker
     private function tokenExists(OTPNotifiable $user, string $token): bool
     {
         return $this->tokenRepository->exists($user, $token);
+    }
+
+    private function makeNotifiable(string $mobile): OTPNotifiable
+    {
+        return $this->userRepository->getModel()->make(['mobile' => $mobile]);
     }
 }

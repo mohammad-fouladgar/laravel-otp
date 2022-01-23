@@ -6,15 +6,19 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateOTPTokensTable extends Migration
 {
-    private string $tokenTable;
+    /** @var string */
+    private $tokenTable;
 
-    private string $userTable;
+    /** @var string */
+    private $userTable;
 
-    private string $mobileColumn;
+    /** @var string */
+    private $mobileColumn;
 
     public function __construct()
     {
-        $this->userTable    = config('otp.user_table', 'users');
+        $default            = config('otp.default_provider', 'users');
+        $this->userTable    = config('otp.user_providers.'.$default.'.table', 'users');
         $this->mobileColumn = config('otp.mobile_column', 'mobile');
         $this->tokenTable   = config('otp.token_table', 'otp_tokens');
     }
@@ -40,6 +44,7 @@ class CreateOTPTokensTable extends Migration
                 $table->increments('id');
                 $table->string('mobile')->index();
                 $table->string('token', 10)->index();
+                $table->timestamp('sent_at')->nullable();
                 $table->timestamp('expires_at')->nullable();
 
                 $table->index(['mobile', 'token']);

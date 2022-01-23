@@ -2,8 +2,9 @@
 
 namespace Fouladgar\OTP\Tests;
 
+use Carbon\Carbon;
+use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
-use Fouladgar\OTP\Token\TokenRepositoryInterface;
 use Illuminate\Support\Facades\Cache;
 
 class CacheTokenRepositoryTest extends TestCase
@@ -33,8 +34,8 @@ class CacheTokenRepositoryTest extends TestCase
      */
     public function it_can_create_a_token_successfully(): void
     {
-        $payload = ['mobile' => $this->user->mobile];
-        $token = $this->repository->create($this->user);
+        $payload          = ['mobile' => $this->user->mobile, 'sent_at' => now()->toDateTimeString()];
+        $token            = $this->repository->create($this->user);
         $payload['token'] = $token;
 
         $this->assertEquals(Cache::get($payload['mobile']), $payload);
@@ -67,11 +68,14 @@ class CacheTokenRepositoryTest extends TestCase
      */
     public function it_fails_when_token_is_exist_but_expired(): void
     {
-        config()->set('otp.token_lifetime', -5);
+        $testDate = Carbon::create(2022, 1, 20, 12);
+        Carbon::setTestNow($testDate);
 
         $this->repository = $this->app->make(TokenRepositoryInterface::class);
+
         $token = $this->repository->create($this->user);
 
+        Carbon::setTestNow();
         $this->assertFalse($this->repository->exists($this->user, $token));
     }
 
