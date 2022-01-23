@@ -12,7 +12,6 @@ use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
 use Fouladgar\OTP\Exceptions\UserNotFoundByMobileException;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
 use Fouladgar\OTP\UserProviderResolver;
-use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Arr;
 use Throwable;
 
@@ -43,10 +42,10 @@ class OTPBroker
 
     public function __construct(TokenRepositoryInterface $tokenRepository, UserProviderResolver $providerResolver)
     {
-        $this->tokenRepository  = $tokenRepository;
+        $this->tokenRepository = $tokenRepository;
         $this->providerResolver = $providerResolver;
-        $this->channel          = $this->getDefaultChannel();
-        $this->userRepository   = $this->resolveUserRepository();
+        $this->channel = $this->getDefaultChannel();
+        $this->userRepository = $this->resolveUserRepository();
     }
 
     /**
@@ -56,7 +55,7 @@ class OTPBroker
     {
         $user = $userExists ? $this->findUserByMobile($mobile) : null;
 
-        throw_if(!$user && $userExists, UserNotFoundByMobileException::class);
+        throw_if(! $user && $userExists, UserNotFoundByMobileException::class);
 
         $notifiable = $user ?? $this->makeNotifiable($mobile);
 

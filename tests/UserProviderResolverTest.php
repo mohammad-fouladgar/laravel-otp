@@ -37,7 +37,7 @@ class UserProviderResolverTest extends TestCase
         $config = m::mock(Config::class);
 
         $config->shouldReceive('get')->with('otp.user_providers.users')->andReturn([
-            'model'      => stdClass::class,
+            'model' => stdClass::class,
             'repository' => stdClass::class,
         ]);
 
@@ -53,10 +53,10 @@ class UserProviderResolverTest extends TestCase
         $this->expectExceptionMessage('Your repository must implement "Fouladgar\OTP\Contracts\NotifiableRepositoryInterface".');
 
         $config = m::mock(Config::class);
-        $model  = m::mock(OTPNotifiable::class);
+        $model = m::mock(OTPNotifiable::class);
 
         $config->shouldReceive('get')->with('otp.user_providers.users')->andReturn([
-            'model'      => $model,
+            'model' => $model,
             'repository' => stdClass::class,
         ]);
 
@@ -68,12 +68,12 @@ class UserProviderResolverTest extends TestCase
     /** @test * */
     public function it_can_resolve_provider_repository_successfully(): void
     {
-        $config     = m::mock(Config::class);
-        $model      = m::mock(OTPNotifiable::class);
+        $config = m::mock(Config::class);
+        $model = m::mock(OTPNotifiable::class);
         $repository = m::mock(NotifiableRepositoryInterface::class);
 
         $config->shouldReceive('get')->with('otp.user_providers.users')->andReturn([
-            'model'      => $model,
+            'model' => $model,
             'repository' => $repository,
         ]);
 
@@ -81,5 +81,4 @@ class UserProviderResolverTest extends TestCase
 
         $resolver->resolve('users');
     }
-
 }

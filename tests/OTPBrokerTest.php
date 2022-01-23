@@ -93,7 +93,7 @@ class OTPBrokerTest extends TestCase
         Notification::fake();
 
         $useChannels = [OTPSMSChannel::class, 'mail'];
-        $user        = OTP(self::MOBILE, $useChannels);
+        $user = OTP(self::MOBILE, $useChannels);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         if ($this->versionCompareApp) {

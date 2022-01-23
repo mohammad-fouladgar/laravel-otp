@@ -31,14 +31,14 @@ class UserProviderResolver
             throw new InvalidArgumentException("User provider [{$name}] is not defined.");
         }
 
-        $model      = $config['model'];
+        $model = $config['model'];
         $repository = $config['repository'];
 
-        if (!is_subclass_of($model, OTPNotifiable::class)) {
+        if (! is_subclass_of($model, OTPNotifiable::class)) {
             throw new Exception('Your model must be an instance of "Fouladgar\OTP\Contracts\OTPNotifiable".');
         }
 
-        if (!is_subclass_of($repository, NotifiableRepositoryInterface::class)) {
+        if (! is_subclass_of($repository, NotifiableRepositoryInterface::class)) {
             throw new Exception('Your repository must implement "Fouladgar\OTP\Contracts\NotifiableRepositoryInterface".');
         }
 

@@ -24,7 +24,7 @@ class CacheTokenRepository extends AbstractTokenRepository
     {
         parent::__construct($expires, $tokenLength);
 
-        $this->cache  = $cache;
+        $this->cache = $cache;
         $this->prefix = $prefix;
     }
 
