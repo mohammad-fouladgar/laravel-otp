@@ -2,7 +2,7 @@
 
 use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
-use Fouladgar\OTP\Token\OTPBroker;
+use Fouladgar\OTP\OTPBroker;
 
 if (! function_exists('OTP')) {
     /**

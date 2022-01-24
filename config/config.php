@@ -25,7 +25,7 @@ return [
      | use this "Fouladgar\OTP\Concerns\HasOTPNotify" trait.
      |
      | You may also change the default repository and replace your own repository. But every repository must
-     | extend "Fouladgar\OTP\Contracts\NotifiableRepositoryInterface" abstract class.
+     | implement "Fouladgar\OTP\Contracts\NotifiableRepositoryInterface" abstract class.
      |
      */
     'user_providers'   => [

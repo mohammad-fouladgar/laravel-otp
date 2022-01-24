@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Fouladgar\OTP\Token;
+namespace Fouladgar\OTP;
 
 use Exception;
 use Fouladgar\OTP\Contracts\NotifiableRepositoryInterface;
@@ -11,7 +11,6 @@ use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
 use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
 use Fouladgar\OTP\Exceptions\UserNotFoundByMobileException;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
-use Fouladgar\OTP\UserProviderResolver;
 use Illuminate\Support\Arr;
 use Throwable;
 
