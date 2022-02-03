@@ -23,18 +23,18 @@ trait HasOTPNotify
         return $this->{$this->getMobileField()};
     }
 
+    public function routeNotificationForOTP(): string
+    {
+        return $this->{$this->getMobileField()};
+    }
+
     private function appendMobileFieldToFillableAttributes(): void
     {
         $mobileFiled = $this->getMobileField();
 
-        if (! in_array($mobileFiled, $this->fillable, true)) {
+        if (!in_array($mobileFiled, $this->fillable, true)) {
             $this->fillable = array_merge($this->fillable, [$mobileFiled]);
         }
-    }
-
-    public function routeNotificationForOTP(): string
-    {
-        return $this->{$this->getMobileField()};
     }
 
     private function getMobileField(): string
