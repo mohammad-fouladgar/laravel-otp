@@ -21,9 +21,9 @@ class MessagePayload
 
     public function __construct(string $to, string $content, string $from = '')
     {
-        $this->to      = $to;
+        $this->to = $to;
         $this->content = $content;
-        $this->from    = $from;
+        $this->from = $from;
     }
 
     public function to(): string
