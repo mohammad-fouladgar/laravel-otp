@@ -32,7 +32,7 @@ trait HasOTPNotify
     {
         $mobileFiled = $this->getOTPMobileField();
 
-        if (!in_array($mobileFiled, $this->fillable, true)) {
+        if (! in_array($mobileFiled, $this->fillable, true)) {
             $this->fillable = array_merge($this->fillable, [$mobileFiled]);
         }
     }
