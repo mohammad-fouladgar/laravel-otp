@@ -139,7 +139,7 @@ return [
 ];
 ```
 
-> **Note:** You may also change the default repository and replace your own repository. But every repository must implement `Fouladgar\OTP\Contracts\NotifiableRepositoryInterface` interface
+> **Note:** You may also change the default repository and replace your own repository. But every repository must implement `Fouladgar\OTP\Contracts\NotifiableRepositoryInterface` interface.
 
 #### Model Preparation
 
@@ -217,7 +217,7 @@ return [
 
 ## Practical Example
 
-Here we prepared a practical example. Suppose you are going to login/register a customer by sending an OTP:
+Here we have prepared a practical example. Suppose you are going to login/register a customer by sending an OTP:
 
 ```php
 <?php
@@ -299,10 +299,10 @@ return [
 OTP notification prepares a default sms and email format that are satisfied for most application. However, you can
 customize how the mail/sms message is constructed.
 
-To get started, pass a closure to the toSMSUsing/toMailUsing method provided by
+To get started, pass a closure to the `toSMSUsing/toMailUsing` method provided by
 the `Fouladgar\OTP\Notifications\OTPNotification` notification. The closure will receive the notifiable model instance
-that is receiving the notification as well as the `token` for validating. Typically, you should call the toMailUsing
-method from the boot method of your application's `App\Providers\AuthServiceProvider` class:
+that is receiving the notification as well as the `token` for validating. Typically, you should call the those
+methods from the boot method of your application's `App\Providers\AuthServiceProvider` class:
 
 ```php
 <?php
