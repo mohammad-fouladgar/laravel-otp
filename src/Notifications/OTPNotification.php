@@ -81,8 +81,7 @@ class OTPNotification extends Notification
     protected function buildMailMessage(): MailMessage
     {
         return (new MailMessage)
-            ->subject(Lang::get('OTP Login'))
-            ->greeting(Lang::get('OTP Login'))
-            ->line(Lang::get('Your OTP code is: :token.', ['token' => $this->token]));
+            ->subject(Lang::get('OTP::otp.otp_subject'))
+            ->line(Lang::get('OTP::otp.otp_token', ['token' => $this->token]));
     }
 }

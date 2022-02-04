@@ -25,7 +25,7 @@ return [
      | use this "Fouladgar\OTP\Concerns\HasOTPNotify" trait.
      |
      | You may also change the default repository and replace your own repository. But every repository must
-     | implement "Fouladgar\OTP\Contracts\NotifiableRepositoryInterface" abstract class.
+     | implement "Fouladgar\OTP\Contracts\NotifiableRepositoryInterface" interface.
      |
      */
     'user_providers'   => [
@@ -99,7 +99,7 @@ return [
      |--------------------------------------------------------------------------
      |
      | Here you should specify your implemented "SMS Client" class. This class is responsible
-     | for sending SMS to users. You may use your own sms channel, so this is not a required option.
+     | for sending SMS to users. You may use your own sms channel, so this is not a required option anymore.
      |
      */
     'sms_client'       => '',

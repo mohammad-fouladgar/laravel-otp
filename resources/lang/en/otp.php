@@ -11,4 +11,6 @@ return [
     |
     */
     'otp_token' => 'Your OTP Token is: :token.',
+
+    'otp_subject' => 'OTP request',
 ];
