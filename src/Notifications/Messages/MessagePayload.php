@@ -14,10 +14,16 @@ class MessagePayload
      */
     private $content;
 
-    public function __construct(string $to, string $content)
+    /**
+     * @var string
+     */
+    private $from;
+
+    public function __construct(string $to, string $content, string $from = '')
     {
-        $this->to = $to;
+        $this->to      = $to;
         $this->content = $content;
+        $this->from    = $from;
     }
 
     public function to(): string
@@ -28,5 +34,10 @@ class MessagePayload
     public function content(): string
     {
         return $this->content;
+    }
+
+    public function from(): string
+    {
+        return $this->from;
     }
 }

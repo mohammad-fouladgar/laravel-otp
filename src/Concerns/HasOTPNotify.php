@@ -8,7 +8,7 @@ trait HasOTPNotify
 {
     public function getFillable()
     {
-        $this->appendMobileFieldToFillableAttributes();
+        $this->appendMobileToFillableAttributes();
 
         return $this->fillable;
     }
@@ -20,24 +20,24 @@ trait HasOTPNotify
 
     public function getMobileForOTPNotification(): string
     {
-        return $this->{$this->getMobileField()};
+        return $this->{$this->getOTPMobileField()};
     }
 
     public function routeNotificationForOTP(): string
     {
-        return $this->{$this->getMobileField()};
+        return $this->{$this->getOTPMobileField()};
     }
 
-    private function appendMobileFieldToFillableAttributes(): void
+    private function appendMobileToFillableAttributes(): void
     {
-        $mobileFiled = $this->getMobileField();
+        $mobileFiled = $this->getOTPMobileField();
 
         if (!in_array($mobileFiled, $this->fillable, true)) {
             $this->fillable = array_merge($this->fillable, [$mobileFiled]);
         }
     }
 
-    private function getMobileField(): string
+    private function getOTPMobileField(): string
     {
         return config('otp.mobile_column', 'mobile');
     }

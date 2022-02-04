@@ -32,7 +32,7 @@ class UserProviderResolverTest extends TestCase
     public function it_can_throw_exception_if_model_is_not_an_valid_instance(): void
     {
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('Your model must be an instance of "Fouladgar\OTP\Contracts\OTPNotifiable".');
+        $this->expectExceptionMessage('Your model must implement "Fouladgar\OTP\Contracts\OTPNotifiable".');
 
         $config = m::mock(Config::class);
 

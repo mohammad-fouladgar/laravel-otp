@@ -21,7 +21,7 @@ return [
      | Here you should specify your user providers. This defines how the users are actually retrieved out of your
      | database or other storage mechanisms used by this application to persist your user's data.
      |
-     | Keep in mind, every model must be an instance of "Fouladgar\OTP\Contracts\OTPNotifiable" and also
+     | Keep in mind, every model must implement "Fouladgar\OTP\Contracts\OTPNotifiable" and also
      | use this "Fouladgar\OTP\Concerns\HasOTPNotify" trait.
      |
      | You may also change the default repository and replace your own repository. But every repository must
@@ -37,7 +37,7 @@ return [
 
 //        'admins' => [
 //            'model'      => \App\Models\Admin::class,
-//            'repository' => \Fouladgar\OTP\NotifiableRepositoryInterface::class,
+//            'repository' => \Fouladgar\OTP\NotifiableRepository::class,
 //        ],
     ],
 
@@ -98,8 +98,8 @@ return [
      | SMS Client (REQUIRED)
      |--------------------------------------------------------------------------
      |
-     | Here you should specify your implemented "SMS Client" class. This class is
-     | responsible for sending SMS to users.
+     | Here you should specify your implemented "SMS Client" class. This class is responsible
+     | for sending SMS to users. You may use your own sms channel, so this is not a required option.
      |
      */
     'sms_client'       => '',
@@ -122,6 +122,8 @@ return [
     |  Default SMS Notification Channel
     |--------------------------------------------------------------------------
     |
+    | This is an otp default sms channel. But you may specify your own sms channel.
+    | If you use default channel you must set "sms_client". Otherwise you don't need that.
     |
     */
     'channel'          => \Fouladgar\OTP\Notifications\Channels\OTPSMSChannel::class,

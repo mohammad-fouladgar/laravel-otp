@@ -14,6 +14,12 @@ class OTPMessage
      */
     private $to;
 
+    /**
+     * @var
+     */
+    private $from = '';
+
+
     public function content(string $content): self
     {
         $this->content = $content;
@@ -28,8 +34,15 @@ class OTPMessage
         return $this;
     }
 
+    public function from(string $from): self
+    {
+        $this->from = $from;
+
+        return $this;
+    }
+
     public function getPayload(): MessagePayload
     {
-        return (new MessagePayload($this->to, $this->content));
+        return (new MessagePayload($this->to, $this->content, $this->from));
     }
 }

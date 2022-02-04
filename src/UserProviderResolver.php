@@ -35,7 +35,7 @@ class UserProviderResolver
         $repository = $config['repository'];
 
         if (! is_subclass_of($model, OTPNotifiable::class)) {
-            throw new Exception('Your model must be an instance of "Fouladgar\OTP\Contracts\OTPNotifiable".');
+            throw new Exception('Your model must implement "Fouladgar\OTP\Contracts\OTPNotifiable".');
         }
 
         if (! is_subclass_of($repository, NotifiableRepositoryInterface::class)) {

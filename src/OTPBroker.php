@@ -10,7 +10,6 @@ use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
 use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
 use Fouladgar\OTP\Exceptions\UserNotFoundByMobileException;
-use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
 use Illuminate\Support\Arr;
 use Throwable;
 
@@ -106,7 +105,7 @@ class OTPBroker
         return $this;
     }
 
-    public function revoke(OTPNotifiableUser $user): bool
+    public function revoke(OTPNotifiable $user): bool
     {
         return $this->tokenRepository->deleteExisting($user);
     }

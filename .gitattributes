@@ -16,3 +16,4 @@
 /VERSION            export-ignore
 /CONTRIBUTING.md    export-ignore
 /bump-version.sh    export-ignore
+/.github            export-ignore
