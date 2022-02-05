@@ -1,60 +1,67 @@
-# Laravel OTP(One-Time Password)
+# Laravel OTP (One-Time Password)
 
-## Introduction
+In the era of platforms' ease of use, most of the web application providing OTP authentication method for their users' convenience. Laravel OTP package equip your application in simple way using handy api so that you as a developer can easily integrate the One-Time Password validation.
 
-Most of the web applications need an OTP(one-time password) or secure code to validate their users. This package allows
-you to send/resend and validate OTP for users authentication with user-friendly methods.
+![Lazy Cat](https://i.ibb.co/FHb5rp4/lazy-cat.jpg)
 
-## Basic Usage:
+## Basic Usage
 
 ```php
 <?php
 
-// Send an OTP to a valid mobile number.
+/**
+ * Send OTP via SMS.
+ */
 OTP()->send('+989389599530');
-
+// or
 OTP('+989389599530');
 
-// Send otp via channels
+/**
+ * Send OTP via channels.
+ */
 OTP()->channel(['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class])
      ->send('+989389599530');
-
+// or
 OTP('+989389599530', ['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class]);
 
-// Send otp for specific user provider
+/**
+ * Send OTP for specific user provider
+ */
 OTP()->useProvider('admins')
      ->send('+989389599530');
 
-// Validate OTP
+/**
+ * Validate OTP
+ */
 OTP()->validate('+989389599530', 'token_123');
-
+// or
 OTP('+989389599530', 'token_123');
-
+// or
 OTP()->useProvider('users')
      ->validate('+989389599530', 'token_123');
 ```
 
 ## Installation
 
-You can install the package via composer:
+Package is available on composer:
 
-```shell
-composer require fouladgar/laravel-otp
+```bash
+$ composer require fouladgar/laravel-otp
 ```
 
 ## Configuration
 
-To get started, you should publish the `config/otp.php` config file with:
+As next step, let's publish config file `config/otp.php` by executing:
 
+```bash
+$ php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="config"
 ```
-php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="config"
-```
 
-### Token Storage
+### Password Storage
 
-After generating a token, we need to store it in a storage. This package supports two drivers: `cache` and `database`
-which the default driver is `cache`. You may specify which storage driver you would like to be used for saving tokens in
-your application:
+Package allows you to store the generated one-time password on either `cache` or `database` driver, default is `cache`.
+
+You can change the preferred driver through config file we published earlier:
 
 ```php
 // config/otp.php
@@ -63,22 +70,23 @@ your application:
 
 return [
     /**
-    |Supported drivers: "cache", "database"
-    */
+     * Supported drivers: "cache", "database"
+     */
     'token_storage' => 'cache',
 ];
 ```
 
 ##### Cache
 
-When using the `cache` driver, the token will be stored in a cache driver configured by your application. In this case,
-your application performance is more than when using database definitely.
+Note that `Laravel OTP` packages uses the already configured `cache` driver for storage, if you didn't configured one yet or don't have plan to do it you can use `database` instead.
 
 ##### Database
 
-It means after migrating, a table will be created which your application needs to store verification tokens.
+Per a migration, a table named `otp_token` will be created and also a column named `mobile` will be added to the existing `users` (or the [default provider](#user-providers)) table in the configured `database`.
 
-> If you’re using another column name for `mobile` phone or even `otp_tokens` table, you can customize their values in config file:
+Note: we give you more open hand on customizing the table to be consistent with you database naming conventions so that in `config/otp.php` file you may define:
+- `token_table`: this package is going to use this table for its purposes
+- `mobile_column`: customize the column name to whatever you prefer e.g. `phone_number`
 
 ```php
 // config/otp.php
@@ -96,21 +104,21 @@ return [
 
 ```
 
-Depending on the `token_storage` config, the package will create a token table. Also, a `mobile` column will be added to
-your `users` ([default provider](#user-providers)) table to show user verification state and store user's mobile phone.
+Perform database migration:
 
-All right! Now you should migrate the database:
-
-```
-php artisan migrate
+```bash
+$ php artisan migrate
 ```
 
-> **Note:** When you are using OTP to login user, consider all columns must be nullable except for the `mobile` column. Because, after verifying OTP, a user record will be created if the user does not exist.
+There we go! 🎉
 
-## User providers
+> **Note:** When you are using OTP for user login purposes, you shall consider that all columns must be `nullable` except for `mobile` column. Because, once OTP verified, a user record will be created if the user does not already exist.
 
-You may wish use the OTP for variant users. Laravel OTP allows you to define and manage many user providers that you
-need. In order to set up, you should open `config/otp.php` file and define your providers:
+## User Providers
+
+You might want to use `Laravel OTP` for different type of users, in such case Laravel OTP allows you to define and manage user providers as many as you want.
+
+In order to set up, you should open `config/otp.php` file and define your providers:
 
 ```php
 // config/otp.php
@@ -139,12 +147,11 @@ return [
 ];
 ```
 
-> **Note:** You may also change the default repository and replace your own repository. But every repository must implement `Fouladgar\OTP\Contracts\NotifiableRepositoryInterface` interface.
+> **Note:** You can also change the default repository and replace your own repository however every repository must implement `Fouladgar\OTP\Contracts\NotifiableRepositoryInterface` interface.
 
 #### Model Preparation
 
-Every model must implement `Fouladgar\OTP\Contracts\OTPNotifiable` and also use
-this `Fouladgar\OTP\Concerns\HasOTPNotify` trait:
+Every model should implement `Fouladgar\OTP\Contracts\OTPNotifiable` and use `Fouladgar\OTP\Concerns\HasOTPNotify` trait:
 
 ```php
 <?php
@@ -167,7 +174,9 @@ class User extends Authenticatable implements OTPNotifiable
 
 ### SMS Client
 
-You can use any SMS services for sending verification messages(it depends on your choice). For sending notifications via
+You can use any SMS services for sending password (it's totally up to you).
+
+For sending notifications via
 this package, first you need to implement the `Fouladgar\OTP\Contracts\SMSClient` contract. This contract requires you
 to implement `sendMessage` method.
 
@@ -200,7 +209,7 @@ class SampleSMSClient implements SMSClient
 
 > In above example, `SMSService` can be replaced with your chosen SMS service along with its respective method.
 
-Next, you should set the your `SampleSMSClient` class in config file:
+Next, you should set the client wrapper `SampleSMSClient` class in config file:
 
 ```php
 // config/otp.php
@@ -217,7 +226,7 @@ return [
 
 ## Practical Example
 
-Here we have prepared a practical example. Suppose you are going to login/register a customer by sending an OTP:
+Here we have prepared a practical example. The presume is that you are going to login/register a customer by sending an OTP:
 
 ```php
 <?php
@@ -331,7 +340,7 @@ public function boot()
 }
 ```
 
-## Translates
+## I18n
 
 To publish translation file you may use this command:
 
@@ -355,8 +364,8 @@ return [
 
 ## Testing
 
-```sh
-composer test
+```bash
+$ composer test
 ```
 
 ## Changelog
@@ -377,4 +386,4 @@ Laravel-OTP is released under the MIT License. See the bundled
 [LICENSE](https://github.com/mohammad-fouladgar/laravel-mobile-verification/blob/master/LICENSE)
 file for details.
 
-Built with :heart: for you.
+Built with :heart: for lazy people.
