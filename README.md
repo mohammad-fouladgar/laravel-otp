@@ -10,8 +10,6 @@ you to send/resend and validate OTP for users authentication with user-friendly 
 ```php
 <?php
 
-
-
 /**
  * Send OTP via SMS.
  */

@@ -8,20 +8,8 @@ use Illuminate\Support\Carbon;
 
 abstract class AbstractTokenRepository implements TokenRepositoryInterface
 {
-    /**
-     * @var int
-     */
-    protected $expires;
-
-    /**
-     * @var int
-     */
-    protected $tokenLength;
-
-    public function __construct(int $expires, int $tokenLength)
+    public function __construct(protected int $expires, protected int $tokenLength)
     {
-        $this->expires = $expires;
-        $this->tokenLength = $tokenLength;
     }
 
     public function create(OTPNotifiable $user): string
@@ -49,7 +37,7 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
 
     protected function getPayload(string $mobile, string $token): array
     {
-        return ['mobile' => $mobile, 'token' => $token , 'sent_at' => now()->toDateTimeString()];
+        return ['mobile' => $mobile, 'token' => $token, 'sent_at' => now()->toDateTimeString()];
     }
 
     /**

@@ -9,20 +9,14 @@ use Illuminate\Notifications\Notification;
 
 class OTPSMSChannel
 {
-    /**
-     * @var SMSClient
-     */
-    protected $SMSClient;
-
-    public function __construct(SMSClient $SMSClient)
+    public function __construct(protected SMSClient $SMSClient)
     {
-        $this->SMSClient = $SMSClient;
     }
 
-    public function send(OTPNotifiable $notifiable, Notification $notification)
+    public function send(OTPNotifiable $notifiable, Notification $notification): mixed
     {
-        if (! $notifiable->routeNotificationFor('otp', $notification)) {
-            return;
+        if (!$notifiable->routeNotificationFor('otp', $notification)) {
+            return null;
         }
 
         /** @var OTPMessage $message */

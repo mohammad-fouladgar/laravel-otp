@@ -10,22 +10,13 @@ use Illuminate\Contracts\Cache\Repository as Cache;
 
 class CacheTokenRepository extends AbstractTokenRepository
 {
-    /**
-     * @var Cache
-     */
-    private $cache;
-
-    /**
-     * @var string
-     */
-    private $prefix;
-
-    public function __construct(Cache $cache, int $expires, int $tokenLength, string $prefix)
-    {
+    public function __construct(
+        protected Cache $cache,
+        protected int $expires,
+        protected int $tokenLength,
+        protected string $prefix
+    ) {
         parent::__construct($expires, $tokenLength);
-
-        $this->cache = $cache;
-        $this->prefix = $prefix;
     }
 
     public function deleteExisting(OTPNotifiable $user): bool

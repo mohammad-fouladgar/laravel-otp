@@ -9,15 +9,9 @@ use Illuminate\Support\Facades\Cache;
 
 class CacheTokenRepositoryTest extends TestCase
 {
-    /**
-     * @var TokenRepositoryInterface|mixed
-     */
-    protected $repository;
+    protected TokenRepositoryInterface$repository;
 
-    /**
-     * @var OTPNotifiableUser
-     */
-    protected $user;
+    protected OTPNotifiableUser $user;
 
     public function setUp(): void
     {

@@ -12,30 +12,12 @@ use Illuminate\Support\Facades\Lang;
 
 class OTPNotification extends Notification
 {
-    /**
-     * @var Closure|null
-     */
-    public static $toMailCallback = null;
+    public static ?Closure $toMailCallback = null;
 
-    /**
-     * @var Closure|null
-     */
-    public static $toSMSCallback = null;
+    public static ?Closure $toSMSCallback = null;
 
-    /**
-     * @var string
-     */
-    private $token;
-
-    /**
-     * @var array
-     */
-    private $channels;
-
-    public function __construct(string $token, array $channels)
+    public function __construct(private string $token, private array $channels)
     {
-        $this->token = $token;
-        $this->channels = $channels;
     }
 
     public static function toMailUsing(Closure $callback): void

@@ -6,7 +6,7 @@ use Fouladgar\OTP\Notifications\OTPNotification;
 
 trait HasOTPNotify
 {
-    public function getFillable()
+    public function getFillable(): array
     {
         $this->appendMobileToFillableAttributes();
 
@@ -32,7 +32,7 @@ trait HasOTPNotify
     {
         $mobileFiled = $this->getOTPMobileField();
 
-        if (! in_array($mobileFiled, $this->fillable, true)) {
+        if (!in_array($mobileFiled, $this->fillable, true)) {
             $this->fillable = array_merge($this->fillable, [$mobileFiled]);
         }
     }

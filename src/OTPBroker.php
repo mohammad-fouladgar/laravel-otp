@@ -15,34 +15,17 @@ use Throwable;
 
 class OTPBroker
 {
-    /**
-     * @var TokenRepositoryInterface
-     */
-    private $tokenRepository;
+    private array $channel;
 
-    /**
-     * @var array
-     */
-    private $channel;
+    private ?string $token = null;
 
-    /**
-     * @var string|null
-     */
-    private $token = null;
+    private NotifiableRepositoryInterface $userRepository;
 
-    /**
-     * @var UserProviderResolver
-     */
-    private $providerResolver;
-
-    /** @var NotifiableRepositoryInterface */
-    private $userRepository;
-
-    public function __construct(TokenRepositoryInterface $tokenRepository, UserProviderResolver $providerResolver)
-    {
-        $this->tokenRepository = $tokenRepository;
-        $this->providerResolver = $providerResolver;
-        $this->channel = $this->getDefaultChannel();
+    public function __construct(
+        private TokenRepositoryInterface $tokenRepository,
+        private UserProviderResolver $providerResolver
+    ) {
+        $this->channel        = $this->getDefaultChannel();
         $this->userRepository = $this->resolveUserRepository();
     }
 
@@ -53,7 +36,7 @@ class OTPBroker
     {
         $user = $userExists ? $this->findUserByMobile($mobile) : null;
 
-        throw_if(! $user && $userExists, UserNotFoundByMobileException::class);
+        throw_if(!$user && $userExists, UserNotFoundByMobileException::class);
 
         $notifiable = $user ?? $this->makeNotifiable($mobile);
 
@@ -98,7 +81,7 @@ class OTPBroker
         return $this;
     }
 
-    public function channel($channel = ['']): self
+    public function channel($channel = ['']): static
     {
         $this->channel = is_array($channel) ? $channel : func_get_args();
 

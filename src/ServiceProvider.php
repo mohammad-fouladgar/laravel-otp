@@ -22,9 +22,7 @@ class ServiceProvider extends BaseServiceProvider
             function (ChannelManager $service) {
                 $service->extend(
                     'otp_sms',
-                    function ($app) {
-                        return new OTPSMSChannel($app->make(config('otp.sms_client')));
-                    }
+                    fn($app) => new OTPSMSChannel($app->make(config('otp.sms_client')))
                 );
             }
         );
@@ -45,14 +43,14 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
-        $this->loadTranslationsFrom(__DIR__ . '/../lang', 'OTP');
+        $this->loadTranslationsFrom(__DIR__.'/../lang', 'OTP');
     }
 
     protected function registerPublishing(): void
     {
         $this->publishes([$this->getConfig() => config_path('otp.php')], 'config');
 
-        $this->publishes([__DIR__ . '/../lang' => app()->langPath() . '/vendor/OTP'], 'lang');
+        $this->publishes([__DIR__.'/../lang' => app()->langPath().'/vendor/OTP'], 'lang');
 
         $this->publishes([__DIR__.'/../database/migrations' => database_path('migrations')], 'migrations');
     }
@@ -64,13 +62,9 @@ class ServiceProvider extends BaseServiceProvider
 
     protected function registerBindings(): void
     {
-        $this->app->singleton('token.repository', function ($app) {
-            return new TokenRepositoryManager($app);
-        });
+        $this->app->singleton('token.repository', fn($app) => new TokenRepositoryManager($app));
 
-        $this->app->singleton(TokenRepositoryInterface::class, function ($app) {
-            return $app['token.repository']->driver();
-        });
+        $this->app->singleton(TokenRepositoryInterface::class, fn($app) => $app['token.repository']->driver());
 
         $this->app->singleton(
             SMSClient::class,

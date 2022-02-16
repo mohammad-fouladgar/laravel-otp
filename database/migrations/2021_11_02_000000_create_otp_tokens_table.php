@@ -6,14 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 class CreateOTPTokensTable extends Migration
 {
-    /** @var string */
-    private $tokenTable;
+    private string $tokenTable;
 
-    /** @var string */
-    private $userTable;
+    private string $userTable;
 
-    /** @var string */
-    private $mobileColumn;
+    private string $mobileColumn;
 
     public function __construct()
     {

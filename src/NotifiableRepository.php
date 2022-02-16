@@ -7,21 +7,12 @@ use Fouladgar\OTP\Contracts\OTPNotifiable;
 
 class NotifiableRepository implements NotifiableRepositoryInterface
 {
-    /**
-     * @var OTPNotifiable
-     */
-    protected $model;
 
-    /**
-     * @var string
-     */
-    protected $mobileColumn;
+    protected string $mobileColumn;
 
-    public function __construct(OTPNotifiable $model)
+    public function __construct(protected OTPNotifiable $model)
     {
         $this->mobileColumn = config('otp.mobile_column');
-
-        $this->model = $model;
     }
 
     public function findOrCreateByMobile(string $mobile): OTPNotifiable
@@ -33,7 +24,6 @@ class NotifiableRepository implements NotifiableRepositoryInterface
     {
         return $this->model->where([$this->mobileColumn => $mobile])->first(['id', $this->mobileColumn]);
     }
-
 
     public function getModel(): OTPNotifiable
     {

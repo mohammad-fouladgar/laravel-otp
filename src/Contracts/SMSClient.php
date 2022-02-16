@@ -6,8 +6,5 @@ use Fouladgar\OTP\Notifications\Messages\MessagePayload;
 
 interface SMSClient
 {
-    /**
-     * @return mixed
-     */
-    public function sendMessage(MessagePayload $payload);
+    public function sendMessage(MessagePayload $payload): mixed;
 }

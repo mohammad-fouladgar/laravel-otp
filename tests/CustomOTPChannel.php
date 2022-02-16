@@ -7,7 +7,7 @@ use Illuminate\Notifications\Notification;
 
 class CustomOTPChannel
 {
-    public function send($notifiable, Notification $notification)
+    public function send($notifiable, Notification $notification): string
     {
         /** @var OTPMessage $message */
         $message = $notification->toSMS($notifiable);

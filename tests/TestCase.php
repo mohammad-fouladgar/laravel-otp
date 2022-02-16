@@ -6,6 +6,8 @@ namespace Fouladgar\OTP\Tests;
 
 use Fouladgar\OTP\ServiceProvider;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as BaseTestCase;
 
 class TestCase extends BaseTestCase
@@ -16,11 +18,13 @@ class TestCase extends BaseTestCase
 
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
 
-        $this->withFactories(__DIR__.'/database/factories');
+        Factory::guessFactoryNamesUsing(
+            fn (string $modelName) => 'Fouladgar\\OTP\\Database\\Factories\\'.class_basename($modelName).'Factory'
+        );
     }
 
     /**
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  Application  $app
      */
     protected function getPackageProviders($app): array
     {
@@ -30,7 +34,7 @@ class TestCase extends BaseTestCase
     /**
      * Define environment setup.
      *
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  Application  $app
      */
     protected function getEnvironmentSetUp($app): void
     {

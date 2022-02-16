@@ -15,8 +15,6 @@ class OTPBrokerTest extends TestCase
 {
     protected const MOBILE = '09389599530';
 
-    protected $versionCompareApp;
-
     /**
      * @test
      */
@@ -24,7 +22,7 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $user = factory(OTPNotifiableUser::class)->create();
+        $user = OTPNotifiableUser::factory()->create();
         $this->assertInstanceOf(OTPNotifiable::class, OTP()->send($user->mobile, true));
 
         Notification::assertSentTo(
@@ -67,22 +65,11 @@ class OTPBrokerTest extends TestCase
 
         $user = OTP()->send(self::MOBILE);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
-        if ($this->versionCompareApp) {
-            Notification::assertSentTo(
-                $user,
-                function (OTPNotification $notification, $channels) {
-                    return $channels[0] == config('otp.channel');
-                }
-            );
-        } else {
-            Notification::assertSentTo(
-                $user,
-                OTPNotification::class,
-                function ($notification, $channels) {
-                    return $channels[0] == config('otp.channel');
-                }
-            );
-        }
+
+        Notification::assertSentTo(
+            $user,
+            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+        );
     }
 
     /**
@@ -93,25 +80,13 @@ class OTPBrokerTest extends TestCase
         Notification::fake();
 
         $useChannels = [OTPSMSChannel::class, 'mail'];
-        $user = OTP(self::MOBILE, $useChannels);
+        $user        = OTP(self::MOBILE, $useChannels);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
-        if ($this->versionCompareApp) {
-            Notification::assertSentTo(
-                $user,
-                function (OTPNotification $notification, $channels) use ($useChannels) {
-                    return $channels == $useChannels;
-                }
-            );
-        } else {
-            Notification::assertSentTo(
-                $user,
-                OTPNotification::class,
-                function ($notification, $channels) use ($useChannels) {
-                    return $channels == $useChannels;
-                }
-            );
-        }
+        Notification::assertSentTo(
+            $user,
+            fn(OTPNotification $notification, $channels) => $channels == $useChannels
+        );
     }
 
     /**
@@ -124,22 +99,10 @@ class OTPBrokerTest extends TestCase
         $user = OTP()->channel('otp_sms')->send(self::MOBILE);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
-        if ($this->versionCompareApp) {
-            Notification::assertSentTo(
-                $user,
-                function (OTPNotification $notification, $channels) {
-                    return $channels == ['otp_sms'];
-                }
-            );
-        } else {
-            Notification::assertSentTo(
-                $user,
-                OTPNotification::class,
-                function ($notification, $channels) {
-                    return $channels == ['otp_sms'];
-                }
-            );
-        }
+        Notification::assertSentTo(
+            $user,
+            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
+        );
     }
 
     /**
@@ -152,22 +115,10 @@ class OTPBrokerTest extends TestCase
         $user = OTP(self::MOBILE, [CustomOTPChannel::class]);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
-        if ($this->versionCompareApp) {
-            Notification::assertSentTo(
-                $user,
-                function (OTPNotification $notification, $channels) {
-                    return $channels == [CustomOTPChannel::class];
-                }
-            );
-        } else {
-            Notification::assertSentTo(
-                $user,
-                OTPNotification::class,
-                function ($notification, $channels) {
-                    return $channels == [CustomOTPChannel::class];
-                }
-            );
-        }
+        Notification::assertSentTo(
+            $user,
+            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+        );
     }
 
     /**
@@ -175,7 +126,7 @@ class OTPBrokerTest extends TestCase
      */
     public function it_can_not_validate_a_token_when_token_is_expired_or_invalid(): void
     {
-        $user = factory(OTPNotifiableUser::class)->create();
+        $user = OTPNotifiableUser::factory()->create();
 
         $this->expectException(InvalidOTPTokenException::class);
 
@@ -187,7 +138,7 @@ class OTPBrokerTest extends TestCase
      */
     public function it_can_validate_a_valid_token(): void
     {
-        $user = factory(OTPNotifiableUser::class)->create();
+        $user = OTPNotifiableUser::factory()->create();
 
         OTP()->send($user->mobile);
 
@@ -221,7 +172,7 @@ class OTPBrokerTest extends TestCase
      */
     public function it_can_revoke_a_token_successfully(): void
     {
-        $user = factory(OTPNotifiableUser::class)->create();
+        $user = OTPNotifiableUser::factory()->create();
 
         OTP($user->mobile);
 
@@ -249,9 +200,6 @@ class OTPBrokerTest extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->versionCompareApp = version_compare($this->app->version(), '7', '>=');
-
-        config()->set('otp.user_providers.users.model', \Fouladgar\OTP\Tests\Models\OTPNotifiableUser::class);
+        config()->set('otp.user_providers.users.model', OTPNotifiableUser::class);
     }
 }

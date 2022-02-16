@@ -13,7 +13,7 @@ class NotifiableUserRepositoryTest extends TestCase
      */
     public function it_can_not_find_user_by_mobile_if_does_not_exist(): void
     {
-        $user = factory(OTPNotifiableUser::class)->make();
+        $user = OTPNotifiableUser::factory()->make();
         $repository = new NotifiableRepository($user);
 
         $this->assertNull($repository->findByMobile('09389599530'));
@@ -24,7 +24,7 @@ class NotifiableUserRepositoryTest extends TestCase
      */
     public function it_can_find_user_by_mobile_if_exists(): void
     {
-        $user = factory(OTPNotifiableUser::class)->create();
+        $user = OTPNotifiableUser::factory()->create();
         $repository = new NotifiableRepository($user);
 
         $this->assertInstanceOf(OTPNotifiable::class, $repository->findByMobile($user->mobile));
@@ -35,7 +35,7 @@ class NotifiableUserRepositoryTest extends TestCase
      */
     public function it_can_create_user_by_mobile_if_does_not_exist(): void
     {
-        $user = factory(OTPNotifiableUser::class)->make();
+        $user = OTPNotifiableUser::factory()->make();
         $repository = new NotifiableRepository($user);
 
         $this->assertInstanceOf(OTPNotifiable::class, $repository->findOrCreateByMobile('09389599530'));
@@ -46,7 +46,7 @@ class NotifiableUserRepositoryTest extends TestCase
      */
     public function it_can_find_user_by_mobile_if_exists_instead_creating(): void
     {
-        $user = factory(OTPNotifiableUser::class)->create();
+        $user = OTPNotifiableUser::factory()->create();
         $repository = new NotifiableRepository($user);
 
         $this->assertInstanceOf(OTPNotifiable::class, $repository->findOrCreateByMobile($user->mobile));

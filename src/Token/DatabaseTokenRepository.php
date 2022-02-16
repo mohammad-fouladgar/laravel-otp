@@ -11,26 +11,13 @@ use Illuminate\Database\Query\Builder;
 
 class DatabaseTokenRepository extends AbstractTokenRepository
 {
-    /**
-     * @var ConnectionInterface
-     */
-    protected $connection;
-
-    /**
-     * @var string
-     */
-    protected $table;
-
     public function __construct(
-        ConnectionInterface $connection,
-        int $expires,
-        int $tokenLength,
-        string $table
+        protected ConnectionInterface $connection,
+        protected int $expires,
+        protected int $tokenLength,
+        protected string $table
     ) {
         parent::__construct($expires, $tokenLength);
-
-        $this->table = $table;
-        $this->connection = $connection;
     }
 
     public function deleteExisting(OTPNotifiable $user): bool
@@ -45,7 +32,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
                                ->where('token', $token)
                                ->first();
 
-        return $record && ! $this->tokenExpired($record['expires_at']);
+        return $record && !$this->tokenExpired($record['expires_at']);
     }
 
     protected function getTable(): Builder

@@ -6,13 +6,9 @@ use Fouladgar\OTP\OTPBroker;
 
 if (! function_exists('OTP')) {
     /**
-     * @param  string|null  $mobile
-     * @param  string|array|null  $token
-     *
-     * @return OTPBroker|OTPNotifiable
      * @throws InvalidOTPTokenException|Throwable
      */
-    function OTP(?string $mobile = null, $token = null)
+    function OTP(?string $mobile = null, $token = null):OTPBroker|OTPNotifiable
     {
         /** @var OTPBroker $OTP */
         $OTP = app(OTPBroker::class);

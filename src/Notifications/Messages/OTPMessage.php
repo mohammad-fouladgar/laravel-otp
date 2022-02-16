@@ -4,37 +4,27 @@ namespace Fouladgar\OTP\Notifications\Messages;
 
 class OTPMessage
 {
-    /**
-     * @var
-     */
-    private $content;
+    private string $content;
 
-    /**
-     * @var
-     */
-    private $to;
+    private string $to;
 
-    /**
-     * @var
-     */
-    private $from = '';
+    private string $from = '';
 
-
-    public function content(string $content): self
+    public function content(string $content): static
     {
         $this->content = $content;
 
         return $this;
     }
 
-    public function to(string $to): self
+    public function to(string $to): static
     {
         $this->to = $to;
 
         return $this;
     }
 
-    public function from(string $from): self
+    public function from(string $from): static
     {
         $this->from = $from;
 
