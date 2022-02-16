@@ -68,7 +68,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+            fn (OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
         );
     }
 
@@ -80,12 +80,12 @@ class OTPBrokerTest extends TestCase
         Notification::fake();
 
         $useChannels = [OTPSMSChannel::class, 'mail'];
-        $user        = OTP(self::MOBILE, $useChannels);
+        $user = OTP(self::MOBILE, $useChannels);
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == $useChannels
+            fn (OTPNotification $notification, $channels) => $channels == $useChannels
         );
     }
 
@@ -101,7 +101,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
+            fn (OTPNotification $notification, $channels) => $channels == ['otp_sms']
         );
     }
 
@@ -117,7 +117,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+            fn (OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
         );
     }
 

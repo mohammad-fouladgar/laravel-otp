@@ -25,7 +25,7 @@ class OTPBroker
         private TokenRepositoryInterface $tokenRepository,
         private UserProviderResolver $providerResolver
     ) {
-        $this->channel        = $this->getDefaultChannel();
+        $this->channel = $this->getDefaultChannel();
         $this->userRepository = $this->resolveUserRepository();
     }
 
@@ -36,7 +36,7 @@ class OTPBroker
     {
         $user = $userExists ? $this->findUserByMobile($mobile) : null;
 
-        throw_if(!$user && $userExists, UserNotFoundByMobileException::class);
+        throw_if(! $user && $userExists, UserNotFoundByMobileException::class);
 
         $notifiable = $user ?? $this->makeNotifiable($mobile);
 

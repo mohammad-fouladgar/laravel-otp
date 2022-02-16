@@ -32,7 +32,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
                                ->where('token', $token)
                                ->first();
 
-        return $record && !$this->tokenExpired($record['expires_at']);
+        return $record && ! $this->tokenExpired($record['expires_at']);
     }
 
     protected function getTable(): Builder

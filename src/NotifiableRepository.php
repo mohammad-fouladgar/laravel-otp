@@ -7,7 +7,6 @@ use Fouladgar\OTP\Contracts\OTPNotifiable;
 
 class NotifiableRepository implements NotifiableRepositoryInterface
 {
-
     protected string $mobileColumn;
 
     public function __construct(protected OTPNotifiable $model)

@@ -22,7 +22,7 @@ class ServiceProvider extends BaseServiceProvider
             function (ChannelManager $service) {
                 $service->extend(
                     'otp_sms',
-                    fn($app) => new OTPSMSChannel($app->make(config('otp.sms_client')))
+                    fn ($app) => new OTPSMSChannel($app->make(config('otp.sms_client')))
                 );
             }
         );
@@ -62,9 +62,9 @@ class ServiceProvider extends BaseServiceProvider
 
     protected function registerBindings(): void
     {
-        $this->app->singleton('token.repository', fn($app) => new TokenRepositoryManager($app));
+        $this->app->singleton('token.repository', fn ($app) => new TokenRepositoryManager($app));
 
-        $this->app->singleton(TokenRepositoryInterface::class, fn($app) => $app['token.repository']->driver());
+        $this->app->singleton(TokenRepositoryInterface::class, fn ($app) => $app['token.repository']->driver());
 
         $this->app->singleton(
             SMSClient::class,
