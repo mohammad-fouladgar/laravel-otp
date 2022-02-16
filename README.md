@@ -10,26 +10,36 @@ you to send/resend and validate OTP for users authentication with user-friendly 
 ```php
 <?php
 
-// Send an OTP to a valid mobile number.
-OTP()->send('+989389599530');
 
+
+/**
+ * Send OTP via SMS.
+ */
+OTP()->send('+989389599530');
+// or
 OTP('+989389599530');
 
-// Send otp via channels
+/**
+ * Send OTP via channels.
+ */
 OTP()->channel(['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class])
      ->send('+989389599530');
-
+// or
 OTP('+989389599530', ['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class]);
 
-// Send otp for specific user provider
+/**
+ * Send OTP for specific user provider
+ */
 OTP()->useProvider('admins')
      ->send('+989389599530');
 
-// Validate OTP
+/**
+ * Validate OTP
+ */
 OTP()->validate('+989389599530', 'token_123');
-
+// or
 OTP('+989389599530', 'token_123');
-
+// or
 OTP()->useProvider('users')
      ->validate('+989389599530', 'token_123');
 ```
@@ -44,17 +54,17 @@ composer require fouladgar/laravel-otp
 
 ## Configuration
 
-To get started, you should publish the `config/otp.php` config file with:
+As next step, let's publish config file `config/otp.php` by executing:
 
 ```
-php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="config"
+$ php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="config"
 ```
 
 ### Token Storage
 
-After generating a token, we need to store it in a storage. This package supports two drivers: `cache` and `database`
-which the default driver is `cache`. You may specify which storage driver you would like to be used for saving tokens in
-your application:
+Package allows you to store the generated one-time password on either `cache` or `database` driver, default is `cache`.
+
+You can change the preferred driver through config file that we published earlier:
 
 ```php
 // config/otp.php
@@ -70,9 +80,7 @@ return [
 ```
 
 ##### Cache
-
-When using the `cache` driver, the token will be stored in a cache driver configured by your application. In this case,
-your application performance is more than when using database definitely.
+Note that `Laravel OTP` package uses the already configured `cache` driver to storage token, if you have not configured one yet or have not planned to do it you can use `database` instead.
 
 ##### Database
 
@@ -102,14 +110,14 @@ your `users` ([default provider](#user-providers)) table to show user verificati
 All right! Now you should migrate the database:
 
 ```
-php artisan migrate
+$ php artisan migrate
 ```
 
 > **Note:** When you are using OTP to login user, consider all columns must be nullable except for the `mobile` column. Because, after verifying OTP, a user record will be created if the user does not exist.
 
 ## User providers
 
-You may wish use the OTP for variant users. Laravel OTP allows you to define and manage many user providers that you
+You may wish to use the OTP for variant users. Laravel OTP allows you to define and manage many user providers that you
 need. In order to set up, you should open `config/otp.php` file and define your providers:
 
 ```php
@@ -139,7 +147,7 @@ return [
 ];
 ```
 
-> **Note:** You may also change the default repository and replace your own repository. But every repository must implement `Fouladgar\OTP\Contracts\NotifiableRepositoryInterface` interface.
+> **Note:** You may also change the default repository and replace your own repository. however, every repository must implement `Fouladgar\OTP\Contracts\NotifiableRepositoryInterface` interface.
 
 #### Model Preparation
 
@@ -167,7 +175,9 @@ class User extends Authenticatable implements OTPNotifiable
 
 ### SMS Client
 
-You can use any SMS services for sending verification messages(it depends on your choice). For sending notifications via
+You can use any SMS services for sending OTP message(it depends on your choice).
+
+For sending notifications via
 this package, first you need to implement the `Fouladgar\OTP\Contracts\SMSClient` contract. This contract requires you
 to implement `sendMessage` method.
 
@@ -200,7 +210,7 @@ class SampleSMSClient implements SMSClient
 
 > In above example, `SMSService` can be replaced with your chosen SMS service along with its respective method.
 
-Next, you should set the your `SampleSMSClient` class in config file:
+Next, you should set the client wrapper `SampleSMSClient` class in config file:
 
 ```php
 // config/otp.php
