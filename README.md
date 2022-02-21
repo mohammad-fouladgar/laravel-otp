@@ -5,6 +5,15 @@
 Most of the web applications need an OTP(one-time password) or secure code to validate their users. This package allows
 you to send/resend and validate OTP for users authentication with user-friendly methods.
 
+## Version Compatibility
+
+Laravel  | LaravelMobileVerification
+:---------|:----------
+6.0.x    | 1.0.x
+7.0.x    | 1.0.x
+8.0.x    | 1.0.x
+9.0.x    | 3.0.x
+
 ## Basic Usage:
 
 ```php
