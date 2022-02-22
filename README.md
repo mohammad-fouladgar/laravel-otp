@@ -1,18 +1,20 @@
 # Laravel OTP(One-Time Password)
+![Test Status](https://img.shields.io/github/workflow/status/mohammad-fouladgar/laravel-otp/run-tests?label=tests)
+[![Latest Stable Version](http://poser.pugx.org/fouladgar/laravel-otp/v)](https://packagist.org/packages/fouladgar/laravel-otp)
+[![Total Downloads](http://poser.pugx.org/fouladgar/laravel-otp/downloads)](https://packagist.org/packages/fouladgar/laravel-otp)
+[Code Style Status](https://img.shields.io/github/workflow/status/mohammad-fouladgar/laravel-otp/Check%20&%20fix%20styling?label=code%20style)
 
 ## Introduction
 
-Most of the web applications need an OTP(one-time password) or secure code to validate their users. This package allows
-you to send/resend and validate OTP for users authentication with user-friendly methods.
+Most web applications need an OTP(one-time password) or secure code to validate their users. This package allows you to
+send/resend and validate OTP for users authentication with user-friendly methods.
 
 ## Version Compatibility
 
 Laravel  | LaravelMobileVerification
 :---------|:----------
-6.0.x    | 1.0.x
-7.0.x    | 1.0.x
-8.0.x    | 1.0.x
-9.0.x    | 3.0.x
+9.0.x          | 3.0.x
+6.0.x to 8.0.x | 1.0.x
 
 ## Basic Usage:
 
@@ -64,7 +66,7 @@ composer require fouladgar/laravel-otp
 As next step, let's publish config file `config/otp.php` by executing:
 
 ```
-$ php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="config"
+php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="config"
 ```
 
 ### Token Storage
@@ -87,7 +89,9 @@ return [
 ```
 
 ##### Cache
-Note that `Laravel OTP` package uses the already configured `cache` driver to storage token, if you have not configured one yet or have not planned to do it you can use `database` instead.
+
+Note that `Laravel OTP` package uses the already configured `cache` driver to storage token, if you have not configured
+one yet or have not planned to do it you can use `database` instead.
 
 ##### Database
 
@@ -117,7 +121,7 @@ your `users` ([default provider](#user-providers)) table to show user verificati
 All right! Now you should migrate the database:
 
 ```
-$ php artisan migrate
+php artisan migrate
 ```
 
 > **Note:** When you are using OTP to login user, consider all columns must be nullable except for the `mobile` column. Because, after verifying OTP, a user record will be created if the user does not exist.
@@ -140,7 +144,7 @@ return [
     'user_providers'  => [
         'users' => [
             'table'      => 'users',
-            'model'      => \App\Models\User::class, // if Laravel < 8, change it to \App\User::class
+            'model'      => \App\Models\User::class,
             'repository' => \Fouladgar\OTP\NotifiableRepository::class,
         ],
 
@@ -184,9 +188,8 @@ class User extends Authenticatable implements OTPNotifiable
 
 You can use any SMS services for sending OTP message(it depends on your choice).
 
-For sending notifications via
-this package, first you need to implement the `Fouladgar\OTP\Contracts\SMSClient` contract. This contract requires you
-to implement `sendMessage` method.
+For sending notifications via this package, first you need to implement the `Fouladgar\OTP\Contracts\SMSClient`
+contract. This contract requires you to implement `sendMessage` method.
 
 This method will return your SMS service API results via a `Fouladgar\OTP\Notifications\Messages\MessagePayload` object
 which contains user **mobile** and **token** message:
@@ -201,14 +204,13 @@ use Fouladgar\OTP\Notifications\Messages\MessagePayload;
 
 class SampleSMSClient implements SMSClient
 {
-    protected $SMSService;
-
-    public function sendMessage(MessagePayload $payload)
+    public function __construct(protected SampleSMSService $SMSService)
     {
-        // preparing SMSService ...
+    }
 
-        return $this->SMSService
-                 ->send($payload->to(), $payload->content());
+    public function sendMessage(MessagePayload $payload): mixed
+    {
+        return $this->SMSService->send($payload->to(), $payload->content());
     }
 
     // ...
@@ -244,39 +246,34 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
 use Fouladgar\OTP\OTPBroker as OTPService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Throwable;
 
 class AuthController
 {
-    /**
-    * @var OTPService
-    */
-    private $OTPService;
-
-    public function __construct(OTPService $OTPService)
+    public function __construct(private OTPService $OTPService)
     {
-        $this->OTPService = $OTPService;
     }
 
-    public function sendOTP(Request $request)
+    public function sendOTP(Request $request): JsonResponse
     {
         try {
-            /** @var User $customer */
-            $customer = $this->OTPService->send($request->get('mobile'));
+            /** @var User $user */
+            $user = $this->OTPService->send($request->get('mobile'));
         } catch (Throwable $ex) {
           // or prepare and return a view.
            return response()->json(['message'=>'An Occurred unexpected error.'], 500);
         }
 
-        return response()->json(['message'=>'A token sent to:'. $customer->mobile]);
+        return response()->json(['message'=>'A token sent to:'. $user->mobile]);
     }
 
-    public function verifyOTPAndLogin(Request $request)
+    public function verifyOTPAndLogin(Request $request): JsonResponse
     {
         try {
-            /** @var User $customer */
-            $customer = $this->OTPService->validate($request->get('mobile'), $request->get('token'));
+            /** @var User $user */
+            $user = $this->OTPService->validate($request->get('mobile'), $request->get('token'));
 
             // and do login actions...
 
@@ -318,8 +315,8 @@ customize how the mail/sms message is constructed.
 
 To get started, pass a closure to the `toSMSUsing/toMailUsing` method provided by
 the `Fouladgar\OTP\Notifications\OTPNotification` notification. The closure will receive the notifiable model instance
-that is receiving the notification as well as the `token` for validating. Typically, you should call the those
-methods from the boot method of your application's `App\Providers\AuthServiceProvider` class:
+that is receiving the notification as well as the `token` for validating. Typically, you should call the those methods
+from the boot method of your application's `App\Providers\AuthServiceProvider` class:
 
 ```php
 <?php
@@ -333,18 +330,14 @@ public function boot()
     // ...
 
     // SMS Customization
-    OTPNotification::toSMSUsing(function($notifiable, $token) {
-        return (new OTPMessage())
+    OTPNotification::toSMSUsing(fn($notifiable, $token) =>(new OTPMessage())
                     ->to($notifiable->mobile)
-                    ->content('Your OTP Token is: '.$token);
-    });
+                    ->content('Your OTP Token is: '.$token));
 
     //Email Customization
-    OTPNotification::toMailUsing(function ($notifiable, $token) {
-        return (new MailMessage)
+    OTPNotification::toMailUsing(fn ($notifiable, $token) =>(new MailMessage)
             ->subject('OTP Request')
-            ->line('Your OTP Token is: '.$token);
-    });
+            ->line('Your OTP Token is: '.$token));
 }
 ```
 

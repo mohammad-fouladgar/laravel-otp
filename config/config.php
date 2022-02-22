@@ -31,7 +31,7 @@ return [
     'user_providers'   => [
         'users' => [
             'table'      => 'users',
-            'model'      => \App\Models\User::class, // if Laravel < 8, change it to \App\User::class
+            'model'      => \App\Models\User::class,
             'repository' => \Fouladgar\OTP\NotifiableRepository::class,
         ],
 
