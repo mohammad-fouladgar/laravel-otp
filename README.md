@@ -11,7 +11,7 @@ send/resend and validate OTP for users authentication with user-friendly methods
 
 ## Version Compatibility
 
-Laravel  | LaravelMobileVerification
+Laravel  | Laravel-OTP
 :---------|:----------
 9.0.x          | 3.0.x
 6.0.x to 8.0.x | 1.0.x
