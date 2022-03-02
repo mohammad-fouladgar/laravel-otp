@@ -3,6 +3,7 @@
   "description": "",
   "keywords": [
     "otp",
+    "otp-authentication",
     "otp-login",
     "laravel-otp",
     "one-time-password",
