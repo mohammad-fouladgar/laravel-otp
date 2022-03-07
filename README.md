@@ -263,10 +263,10 @@ class AuthController
             $user = $this->OTPService->send($request->get('mobile'));
         } catch (Throwable $ex) {
           // or prepare and return a view.
-           return response()->json(['message'=>'An Occurred unexpected error.'], 500);
+           return response()->json(['message'=>'An unexpected error occurred.'], 500);
         }
 
-        return response()->json(['message'=>'A token sent to:'. $user->mobile]);
+        return response()->json(['message'=>'A token has been sent to:'. $user->mobile]);
     }
 
     public function verifyOTPAndLogin(Request $request): JsonResponse
@@ -280,10 +280,10 @@ class AuthController
         } catch (InvalidOTPTokenException $exception){
              return response()->json(['error'=>$exception->getMessage()],$exception->getCode());
         } catch (Throwable $ex) {
-            return response()->json(['message'=>'An Occurred unexpected error.'], 500);
+            return response()->json(['message'=>'An unexpected error occurred.'], 500);
         }
 
-         return response()->json(['message'=>'Login has been successfully.']);
+         return response()->json(['message'=>'Logged in successfully.']);
     }
 }
 
