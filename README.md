@@ -52,6 +52,22 @@ OTP('+989389599530', 'token_123');
 OTP()->useProvider('users')
      ->validate('+989389599530', 'token_123');
 ```
+### Validation Rule
+```php
+<?php
+
+'otp-code' => [new \Fouladgar\OTP\ValidationRule('mobile number')]
+
+```
+
+to set validation message you can add this key to `lang/validation.json`
+```php
+'custom' => [
+        'otp' => [
+            'invalid' => 'token is invalid',
+        ]
+    ],
+```
 
 ## Installation
 
