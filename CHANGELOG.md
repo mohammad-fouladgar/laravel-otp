@@ -1,3 +1,5 @@
+## 3.0.1 - 2022-11-10
+ - Fix database expire token logic
 ## 3.0.0 - 2022-02-16
 - Add Support PHP 8.0 and Laravel 9.0
 - Deprecated PHP <= 7.* and Laravel <=8.*
