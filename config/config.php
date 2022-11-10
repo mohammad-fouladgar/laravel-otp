@@ -81,7 +81,7 @@ return [
      | Here you can specify lifetime of OTP tokens (in minutes) which will send to users.
      |
      */
-    'token_lifetime'   => env('OTP_TOKEN_LENGTH', 5),
+    'token_lifetime'   => env('OTP_TOKEN_LIFE_TIME', 5),
 
     /*
    |--------------------------------------------------------------------------

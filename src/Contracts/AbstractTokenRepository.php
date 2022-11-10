@@ -32,7 +32,7 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
 
     protected function tokenExpired(string $expiresAt): bool
     {
-        return Carbon::parse($expiresAt)->addMinutes($this->expires)->isPast();
+        return Carbon::parse($expiresAt)->isPast();
     }
 
     protected function getPayload(string $mobile, string $token): array
