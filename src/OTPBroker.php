@@ -132,6 +132,7 @@ class OTPBroker
 
     private function makeNotifiable(string $mobile): OTPNotifiable
     {
-        return $this->userRepository->getModel()->make(['mobile' => $mobile]);
+        $mobileColumn = config('otp.mobile_column');
+        return $this->userRepository->getModel()->make([$mobileColumn => $mobile]);
     }
 }
