@@ -61,9 +61,20 @@ class OTPBroker
 
         $notifiable = $this->find($mobile, $create);
 
-        $this->revoke($notifiable);
+        if ($notifiable) {
+            $this->revoke($notifiable);
+        }
 
         return $notifiable;
+    }
+
+    public function verify(string $mobile, string $token): bool
+    {
+        $notifiable = $this->makeNotifiable($mobile);
+
+        throw_unless($this->tokenExists($notifiable, $token), InvalidOTPTokenException::class);
+
+        return $this->revoke($notifiable);
     }
 
     public function getToken(): ?string
