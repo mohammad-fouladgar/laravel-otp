@@ -1,3 +1,7 @@
+## 4.1.0 - 2024-04-12
+ - Add support Laravel 11
+ - Detracted Laravel 9
+
 ## 4.0.0 - 2023-03-29
  - Add support for Laravel V10
 ## 3.0.1 - 2022-11-10
