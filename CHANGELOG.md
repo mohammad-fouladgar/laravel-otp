@@ -1,4 +1,4 @@
-## 4.1.0 - 2024-04-12
+## 4.2.0 - 2024-04-12
  - Add support Laravel 11
  - Detracted Laravel 9
 
