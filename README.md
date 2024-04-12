@@ -13,7 +13,7 @@ send/resend and validate OTP for users authentication with user-friendly methods
 
 Laravel  | Laravel-OTP
 :---------|:----------
-11.0.x         | 4.1.x
+11.0.x         | 4.2.x
 10.0.x         | 4.0.x
 9.0.x          | 3.0.x
 6.0.x to 8.0.x | 1.0.x
