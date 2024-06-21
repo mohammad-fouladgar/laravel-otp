@@ -15,6 +15,13 @@ class OTPBrokerTest extends TestCase
 {
     protected const MOBILE = '09389599530';
 
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        config()->set('otp.user_providers.users.model', OTPNotifiableUser::class);
+    }
+
     /**
      * @test
      */
@@ -197,9 +204,23 @@ class OTPBrokerTest extends TestCase
         );
     }
 
-    public function setUp(): void
+     /**
+     * @test
+     */
+    public function it_can_only_confirm_token_and_does_not_create_user(): void
     {
-        parent::setUp();
-        config()->set('otp.user_providers.users.model', OTPNotifiableUser::class);
+        $otp = OTP();
+
+        $otp->send(self::MOBILE, false);
+
+        $user = $otp->onlyConfirmToken()
+                    ->validate(
+                        self::MOBILE, 
+                        Cache::get(self::MOBILE)['token']
+                    );
+
+        $this->assertInstanceOf(OTPNotifiable::class, $user);
+
+        $this->assertEquals(0, OTPNotifiableUser::count());
     }
 }

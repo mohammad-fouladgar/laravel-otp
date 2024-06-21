@@ -31,8 +31,8 @@ return [
     'user_providers'   => [
         'users' => [
             'table'      => 'users',
-            'model'      => \App\Models\User::class,
-            'repository' => \Fouladgar\OTP\NotifiableRepository::class,
+            'model'      => App\Models\User::class,
+            'repository' => Fouladgar\OTP\NotifiableRepository::class,
         ],
 
 //        'admins' => [
@@ -126,5 +126,5 @@ return [
     | If you use default channel you must set "sms_client". Otherwise you don't need that.
     |
     */
-    'channel'          => \Fouladgar\OTP\Notifications\Channels\OTPSMSChannel::class,
+    'channel'          => Fouladgar\OTP\Notifications\Channels\OTPSMSChannel::class,
 ];

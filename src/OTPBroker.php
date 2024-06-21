@@ -19,6 +19,8 @@ class OTPBroker
 
     private ?string $token = null;
 
+    private bool $onlyConfirm = false;
+
     private NotifiableRepositoryInterface $userRepository;
 
     public function __construct(
@@ -59,11 +61,20 @@ class OTPBroker
 
         throw_unless($this->tokenExists($notifiable, $token), InvalidOTPTokenException::class);
 
-        $notifiable = $this->find($mobile, $create);
+        if(!$this->onlyConfirm){
+            $notifiable = $this->find($mobile, $create);
+        }
 
         $this->revoke($notifiable);
 
         return $notifiable;
+    }
+
+    public function onlyConfirmToken(bool $confirm = true): static
+    {
+        $this->onlyConfirm = $confirm;
+
+        return $this;
     }
 
     public function getToken(): ?string
