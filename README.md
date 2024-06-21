@@ -1,8 +1,8 @@
 # Laravel OTP(One-Time Password)
-![Test Status](https://img.shields.io/github/workflow/status/mohammad-fouladgar/laravel-otp/run-tests?label=tests)
-[![Latest Stable Version](http://poser.pugx.org/fouladgar/laravel-otp/v)](https://packagist.org/packages/fouladgar/laravel-otp)
-[![Total Downloads](http://poser.pugx.org/fouladgar/laravel-otp/downloads)](https://packagist.org/packages/fouladgar/laravel-otp)
-[![Code Style Status](https://github.com/mohammad-fouladgar/laravel-otp/actions/workflows/php-cs-fixer.yml/badge.svg?branch=master)](https://github.com/mohammad-fouladgar/laravel-otp/actions/workflows/php-cs-fixer.yml)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/fouladgar/laravel-otp.svg)](https://packagist.org/packages/fouladgar/laravel-otp)
+![Test Status](https://img.shields.io/github/actions/workflow/status/mohammad-fouladgar/laravel-otp/run-tests.yml?label=tests)
+![Code Style Status](https://img.shields.io/github/actions/workflow/status/mohammad-fouladgar/laravel-otp/php-cs-fixer.yml?label=code%20style)
+![Total Downloads](https://img.shields.io/packagist/dt/fouladgar/laravel-otp)
 
 ## Introduction
 
@@ -52,6 +52,10 @@ OTP()->validate('+989389599530', 'token_123');
 OTP('+989389599530', 'token_123');
 // or
 OTP()->useProvider('users')
+     ->validate('+989389599530', 'token_123');
+// or
+OTP()->useProvider('users')
+     ->onlyConfirmToken()   
      ->validate('+989389599530', 'token_123');
 ```
 

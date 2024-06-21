@@ -213,11 +213,7 @@ class OTPBrokerTest extends TestCase
 
         $otp->send(self::MOBILE, false);
 
-        $user = $otp->onlyConfirmToken()
-                    ->validate(
-                        self::MOBILE, 
-                        Cache::get(self::MOBILE)['token']
-                    );
+        $user = $otp->onlyConfirmToken()->validate(self::MOBILE, Cache::get(self::MOBILE)['token']);
 
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
