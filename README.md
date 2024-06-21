@@ -19,46 +19,60 @@ Laravel  | Laravel-OTP
 6.0.x to 8.0.x | 1.0.x
 
 ## Basic Usage:
-
 ```php
 <?php
 
-/**
- * Send OTP via SMS.
- */
-OTP()->send('+989389599530');
-// or
-OTP('+989389599530');
+/*
+|--------------------------------------------------------------------------
+| Send OTP via SMS.
+|--------------------------------------------------------------------------
+*/
+OTP()->send('+98900000000'); 
+// Or
+OTP('+98900000000');
 
-/**
- * Send OTP via channels.
- */
+/*
+|--------------------------------------------------------------------------
+| Send OTP via channels.
+|--------------------------------------------------------------------------
+*/
 OTP()->channel(['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class])
-     ->send('+989389599530');
-// or
-OTP('+989389599530', ['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class]);
+     ->send('+98900000000');
+// Or
+OTP('+98900000000', ['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class]);
 
-/**
- * Send OTP for specific user provider
- */
+/*
+|--------------------------------------------------------------------------
+| Send OTP for specific user provider
+|--------------------------------------------------------------------------
+*/
 OTP()->useProvider('admins')
-     ->send('+989389599530');
+     ->send('+98900000000');
+ 
+/*
+|--------------------------------------------------------------------------
+|  Validate OTP
+|--------------------------------------------------------------------------
+*/
+OTP()->validate('+98900000000', 'token_123');
+// Or
+OTP('+98900000000', 'token_123');
 
-/**
- * Validate OTP
- */
-OTP()->validate('+989389599530', 'token_123');
-// or
-OTP('+989389599530', 'token_123');
-// or
+/*
+|--------------------------------------------------------------------------
+| Validate OTP for specific user provider
+|--------------------------------------------------------------------------
+*/
 OTP()->useProvider('users')
-     ->validate('+989389599530', 'token_123');
-// or
-OTP()->useProvider('users')
-     ->onlyConfirmToken()   
-     ->validate('+989389599530', 'token_123');
+     ->validate('+98900000000', 'token_123');
+/*
+|--------------------------------------------------------------------------
+| You may wish to only confirm the token
+|--------------------------------------------------------------------------
+*/
+OTP()->onlyConfirmToken()   
+     ->validate('+98900000000', 'token_123');
 ```
-
 ## Installation
 
 You can install the package via composer:
