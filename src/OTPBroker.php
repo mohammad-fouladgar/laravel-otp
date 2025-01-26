@@ -8,8 +8,7 @@ use Exception;
 use Fouladgar\OTP\Contracts\NotifiableRepositoryInterface;
 use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
-use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
-use Fouladgar\OTP\Exceptions\UserNotFoundByMobileException;
+use Fouladgar\OTP\Exceptions\OTPException;
 use Illuminate\Support\Arr;
 use Throwable;
 
@@ -38,7 +37,8 @@ class OTPBroker
     {
         $user = $userExists ? $this->findUserByMobile($mobile) : null;
 
-        throw_if(! $user && $userExists, UserNotFoundByMobileException::class);
+        throw_if(! $user && $userExists, OTPException::whenUserNotFoundByMobile());
+        throw_if($this->tokenExists($mobile), OTPException::whenOtpAlreadySent());
 
         $notifiable = $user ?? $this->makeNotifiable($mobile);
 
@@ -53,15 +53,15 @@ class OTPBroker
     }
 
     /**
-     * @throws InvalidOTPTokenException|Throwable
+     * @throws OTPException|Throwable
      */
     public function validate(string $mobile, string $token, bool $create = true): OTPNotifiable
     {
         $notifiable = $this->makeNotifiable($mobile);
 
-        throw_unless($this->tokenExists($notifiable, $token), InvalidOTPTokenException::class);
+        throw_unless($this->verifyToken($notifiable, $token), OTPException::whenOtpTokenIsInvalid());
 
-        if(!$this->onlyConfirm){
+        if (! $this->onlyConfirm) {
             $notifiable = $this->find($mobile, $create);
         }
 
@@ -136,9 +136,14 @@ class OTPBroker
         return is_array($channel) ? $channel : Arr::wrap($channel);
     }
 
-    private function tokenExists(OTPNotifiable $user, string $token): bool
+    public function verifyToken(OTPNotifiable $user, string $token): bool
     {
-        return $this->tokenRepository->exists($user, $token);
+        return $this->tokenRepository->isTokenMatching($user, $token);
+    }
+
+    private function tokenExists(string $mobile): bool
+    {
+        return $this->tokenRepository->exists($mobile);
     }
 
     private function makeNotifiable(string $mobile): OTPNotifiable

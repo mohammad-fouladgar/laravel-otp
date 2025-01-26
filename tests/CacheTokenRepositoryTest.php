@@ -54,7 +54,7 @@ class CacheTokenRepositoryTest extends TestCase
     {
         $token = $this->repository->create($this->user);
 
-        $this->assertTrue($this->repository->exists($this->user, $token));
+        $this->assertTrue($this->repository->isTokenMatching($this->user, $token));
     }
 
     /**

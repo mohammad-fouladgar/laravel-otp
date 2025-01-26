@@ -3,8 +3,7 @@
 namespace Fouladgar\OTP\Tests;
 
 use Fouladgar\OTP\Contracts\OTPNotifiable;
-use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
-use Fouladgar\OTP\Exceptions\UserNotFoundByMobileException;
+use Fouladgar\OTP\Exceptions\OTPException;
 use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
 use Fouladgar\OTP\Notifications\OTPNotification;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
@@ -43,7 +42,8 @@ class OTPBrokerTest extends TestCase
      */
     public function it_can_throw_not_found_if_user_exists_is_true(): void
     {
-        $this->expectException(UserNotFoundByMobileException::class);
+        $this->expectException(OTPException::class);
+
         OTP()->send(self::MOBILE, true);
     }
 
@@ -135,7 +135,7 @@ class OTPBrokerTest extends TestCase
     {
         $user = OTPNotifiableUser::factory()->create();
 
-        $this->expectException(InvalidOTPTokenException::class);
+        $this->expectException(OTPException::class);
 
         OTP()->validate($user->mobile, '12345');
     }
@@ -190,8 +190,10 @@ class OTPBrokerTest extends TestCase
     /**
      * @test
      */
-    public function it_can_send_by_using_provider(): void
+    public function it_can_not_send_otp_when_already_sent(): void
     {
+        $this->expectException(OTPException::class);
+
         Notification::fake();
 
         $user = OTP(self::MOBILE);
@@ -204,9 +206,28 @@ class OTPBrokerTest extends TestCase
         );
     }
 
-     /**
+    /**
      * @test
      */
+    public function it_can_send_by_using_provider(): void
+    {
+        Notification::fake();
+
+        $otp = OTP();
+
+        $user = $otp->send(self::MOBILE, false);
+
+        $this->assertInstanceOf(OTPNotifiable::class, $user);
+
+        Notification::assertSentTo(
+            $user,
+            OTPNotification::class
+        );
+    }
+
+    /**
+    * @test
+    */
     public function it_can_only_confirm_token_and_does_not_create_user(): void
     {
         $otp = OTP();

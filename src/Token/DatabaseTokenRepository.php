@@ -25,12 +25,29 @@ class DatabaseTokenRepository extends AbstractTokenRepository
         return (bool) optional($this->getTable()->where('mobile', $user->getMobileForOTPNotification()))->delete();
     }
 
-    public function exists(OTPNotifiable $user, string $token): bool
+    protected function getLatestRecord(array $filters): ?array
     {
-        $record = (array) $this->getTable()
-                               ->where('mobile', $user->getMobileForOTPNotification())
-                               ->where('token', $token)
-                               ->first();
+        $record = $this->getTable()
+            ->where($filters)
+            ->latest()
+            ->first();
+
+        return $record ? (array) $record : null;
+    }
+
+    public function exists(string $mobile): bool
+    {
+        $record = $this->getLatestRecord(['mobile' => $mobile]);
+
+        return $record && ! $this->tokenExpired($record['expires_at']);
+    }
+
+    public function isTokenMatching(OTPNotifiable $user, string $token): bool
+    {
+        $record = $this->getLatestRecord([
+            'mobile' => $user->getMobileForOTPNotification(),
+            'token' => $token,
+        ]);
 
         return $record && ! $this->tokenExpired($record['expires_at']);
     }
