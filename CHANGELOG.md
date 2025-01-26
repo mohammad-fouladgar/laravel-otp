@@ -1,5 +1,6 @@
 ## 5.0.0 - 2025-01-26
  - Add support otp lifetime token functionality with expiration handling
+ - Replace `InvalidOTPTokenException` and `UserNotFoundByMobileException` with `OTPException` for better error handling
  
 ## 4.3.0 - 2024-06-21
  - Add support only confirm token
