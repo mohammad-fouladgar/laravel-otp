@@ -12,7 +12,12 @@ interface TokenRepositoryInterface
     /**
      * Determine if a token record exists and is valid.
      */
-    public function exists(OTPNotifiable $user, string $token): bool;
+    public function exists(string $mobile): bool;
+
+    /**
+     * Determine if the given token matches the provided one.
+     */
+    public function isTokenMatching(OTPNotifiable $user, string $token): bool;
 
     /**
      * Delete all existing tokens from the storage.
