@@ -24,12 +24,17 @@ class CacheTokenRepository extends AbstractTokenRepository
         return $this->cache->forget($this->getSignatureKey($user->getMobileForOTPNotification()));
     }
 
-    public function exists(OTPNotifiable $user, string $token): bool
+    public function exists(string $mobile): bool
     {
+        return $this->cache->has($this->getSignatureKey($mobile));
+    }
+
+    public function isTokenMatching(OTPNotifiable $user, string $token): bool
+    {
+        $exist = $this->exists($user->getMobileForOTPNotification());
         $signature = $this->getSignatureKey($user->getMobileForOTPNotification());
 
-        return $this->cache->has($signature) &&
-            $this->cache->get($signature)['token'] === $token;
+        return $exist && $this->cache->get($signature)['token'] === $token;
     }
 
     protected function save(string $mobile, string $token): bool

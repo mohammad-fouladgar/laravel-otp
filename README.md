@@ -19,46 +19,60 @@ Laravel  | Laravel-OTP
 6.0.x to 8.0.x | 1.0.x
 
 ## Basic Usage:
-
 ```php
 <?php
 
-/**
- * Send OTP via SMS.
- */
-OTP()->send('+989389599530');
-// or
-OTP('+989389599530');
+/*
+|--------------------------------------------------------------------------
+| Send OTP via SMS.
+|--------------------------------------------------------------------------
+*/
+OTP()->send('+98900000000'); 
+// Or
+OTP('+98900000000');
 
-/**
- * Send OTP via channels.
- */
+/*
+|--------------------------------------------------------------------------
+| Send OTP via channels.
+|--------------------------------------------------------------------------
+*/
 OTP()->channel(['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class])
-     ->send('+989389599530');
-// or
-OTP('+989389599530', ['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class]);
+     ->send('+98900000000');
+// Or
+OTP('+98900000000', ['otp_sms', 'mail', \App\Channels\CustomSMSChannel::class]);
 
-/**
- * Send OTP for specific user provider
- */
+/*
+|--------------------------------------------------------------------------
+| Send OTP for specific user provider
+|--------------------------------------------------------------------------
+*/
 OTP()->useProvider('admins')
-     ->send('+989389599530');
+     ->send('+98900000000');
+ 
+/*
+|--------------------------------------------------------------------------
+|  Validate OTP
+|--------------------------------------------------------------------------
+*/
+OTP()->validate('+98900000000', 'token_123');
+// Or
+OTP('+98900000000', 'token_123');
 
-/**
- * Validate OTP
- */
-OTP()->validate('+989389599530', 'token_123');
-// or
-OTP('+989389599530', 'token_123');
-// or
+/*
+|--------------------------------------------------------------------------
+| Validate OTP for specific user provider
+|--------------------------------------------------------------------------
+*/
 OTP()->useProvider('users')
-     ->validate('+989389599530', 'token_123');
-// or
-OTP()->useProvider('users')
-     ->onlyConfirmToken()   
-     ->validate('+989389599530', 'token_123');
+     ->validate('+98900000000', 'token_123');
+/*
+|--------------------------------------------------------------------------
+| You may wish to only confirm the token
+|--------------------------------------------------------------------------
+*/
+OTP()->onlyConfirmToken()   
+     ->validate('+98900000000', 'token_123');
 ```
-
 ## Installation
 
 You can install the package via composer:
@@ -132,7 +146,24 @@ php artisan migrate
 
 > **Note:** When you are using OTP to login user, consider all columns must be nullable except for the `mobile` column. Because, after verifying OTP, a user record will be created if the user does not exist.
 
-## User providers
+### Token Life Time
+You can specify an OTP `token_lifetime`, ensuring that once an OTP token is sent to the user, no new OTP token will be generated or sent until the current token has expired.
+
+```php
+// config/otp.php
+
+<?php
+
+return [
+    //...
+
+        'token_lifetime' => env('OTP_TOKEN_LIFE_TIME', 5),
+    ],
+
+    //...
+];
+```
+### User providers
 
 You may wish to use the OTP for variant users. Laravel OTP allows you to define and manage many user providers that you
 need. In order to set up, you should open `config/otp.php` file and define your providers:
@@ -242,7 +273,7 @@ return [
 
 ## Practical Example
 
-Here we have prepared a practical example. Suppose you are going to login/register a customer by sending an OTP:
+Here we have prepared a practical example. Suppose you are going to login/register a user by sending an OTP:
 
 ```php
 <?php
@@ -250,7 +281,7 @@ Here we have prepared a practical example. Suppose you are going to login/regist
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use Fouladgar\OTP\Exceptions\InvalidOTPTokenException;
+use Fouladgar\OTP\Exceptions\OTPException;
 use Fouladgar\OTP\OTPBroker as OTPService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -269,10 +300,10 @@ class AuthController
             $user = $this->OTPService->send($request->get('mobile'));
         } catch (Throwable $ex) {
           // or prepare and return a view.
-           return response()->json(['message'=>'An unexpected error occurred.'], 500);
+           return response()->json(['message' => 'An unexpected error occurred.'], 500);
         }
 
-        return response()->json(['message'=>'A token has been sent to:'. $user->mobile]);
+        return response()->json(['message' => 'A token has been sent to:'. $user->mobile]);
     }
 
     public function verifyOTPAndLogin(Request $request): JsonResponse
@@ -283,13 +314,13 @@ class AuthController
 
             // and do login actions...
 
-        } catch (InvalidOTPTokenException $exception){
-             return response()->json(['error'=>$exception->getMessage()],$exception->getCode());
+        } catch (OTPException $exception){
+             return response()->json(['error' => $exception->getMessage()],$exception->getCode());
         } catch (Throwable $ex) {
-            return response()->json(['message'=>'An unexpected error occurred.'], 500);
+            return response()->json(['message' => 'An unexpected error occurred.'], 500);
         }
 
-         return response()->json(['message'=>'Logged in successfully.']);
+         return response()->json(['message' => 'Logged in successfully.']);
     }
 }
 
@@ -305,6 +336,7 @@ channel. In order to replace, you should specify channel class here:
 ```php
 //config/otp.php
 <?php
+
 return [
     // ...
 
