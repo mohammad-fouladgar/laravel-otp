@@ -225,9 +225,9 @@ class OTPBrokerTest extends TestCase
         );
     }
 
-     /**
-     * @test
-     */
+    /**
+    * @test
+    */
     public function it_can_only_confirm_token_and_does_not_create_user(): void
     {
         $otp = OTP();

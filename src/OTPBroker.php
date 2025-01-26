@@ -61,7 +61,7 @@ class OTPBroker
 
         throw_unless($this->verifyToken($notifiable, $token), OTPException::whenOtpTokenIsInvalid());
 
-        if(!$this->onlyConfirm){
+        if (! $this->onlyConfirm) {
             $notifiable = $this->find($mobile, $create);
         }
 

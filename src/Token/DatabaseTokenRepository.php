@@ -39,17 +39,17 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     {
         $record = $this->getLatestRecord(['mobile' => $mobile]);
 
-        return $record && !$this->tokenExpired($record['expires_at']);
+        return $record && ! $this->tokenExpired($record['expires_at']);
     }
 
     public function isTokenMatching(OTPNotifiable $user, string $token): bool
     {
         $record = $this->getLatestRecord([
             'mobile' => $user->getMobileForOTPNotification(),
-            'token'  => $token,
+            'token' => $token,
         ]);
 
-        return $record && !$this->tokenExpired($record['expires_at']);
+        return $record && ! $this->tokenExpired($record['expires_at']);
     }
 
     protected function getTable(): Builder
