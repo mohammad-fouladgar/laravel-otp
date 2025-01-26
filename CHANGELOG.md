@@ -1,3 +1,7 @@
+## 4.3.1 - 2025-01-26
+ - Merge pull request #14 from arefebsh/add-support-lifetime-token
+ - Add support otp lifetime token functionality with expiration handling
+ 
 ## 4.3.0 - 2024-06-21
  - Add support only confirm token
 
