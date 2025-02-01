@@ -12,15 +12,15 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
     {
     }
 
-    public function create(OTPNotifiable $user): string
+    public function create(OTPNotifiable $user, string $indicator): string
     {
         $mobile = $user->getMobileForOTPNotification();
 
-        $this->deleteExisting($user);
+        $this->deleteExisting($user, $indicator);
 
         $token = $this->createNewToken();
 
-        $this->save($mobile, $token);
+        $this->save($mobile, $indicator, $token);
 
         return $token;
     }
@@ -35,13 +35,13 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
         return Carbon::parse($expiresAt)->isPast();
     }
 
-    protected function getPayload(string $mobile, string $token): array
+    protected function getPayload(string $mobile, string $indicator, string $token): array
     {
-        return ['mobile' => $mobile, 'token' => $token, 'sent_at' => now()->toDateTimeString()];
+        return ['mobile' => $mobile, 'indicator' => $indicator, 'token' => $token, 'sent_at' => now()->toDateTimeString()];
     }
 
     /**
      * Insert into token storage.
      */
-    abstract protected function save(string $mobile, string $token): bool;
+    abstract protected function save(string $mobile, string $indicator, string $token): bool;
 }

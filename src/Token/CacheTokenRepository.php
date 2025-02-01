@@ -7,6 +7,7 @@ namespace Fouladgar\OTP\Token;
 use Fouladgar\OTP\Contracts\AbstractTokenRepository;
 use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Illuminate\Contracts\Cache\Repository as Cache;
+use Psr\SimpleCache\InvalidArgumentException;
 
 class CacheTokenRepository extends AbstractTokenRepository
 {
@@ -14,40 +15,45 @@ class CacheTokenRepository extends AbstractTokenRepository
         protected Cache $cache,
         protected int $expires,
         protected int $tokenLength,
-        protected string $prefix
     ) {
         parent::__construct($expires, $tokenLength);
     }
 
-    public function deleteExisting(OTPNotifiable $user): bool
+    public function deleteExisting(OTPNotifiable $user, string $indicator): bool
     {
-        return $this->cache->forget($this->getSignatureKey($user->getMobileForOTPNotification()));
+        return $this->cache->forget($this->getSignatureKey($user->getMobileForOTPNotification(), $indicator));
     }
 
-    public function exists(string $mobile): bool
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function exists(string $mobile, string $indicator): bool
     {
-        return $this->cache->has($this->getSignatureKey($mobile));
+        return $this->cache->has($this->getSignatureKey($mobile, $indicator));
     }
 
-    public function isTokenMatching(OTPNotifiable $user, string $token): bool
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function isTokenMatching(OTPNotifiable $user, string $indicator, string $token): bool
     {
-        $exist = $this->exists($user->getMobileForOTPNotification());
-        $signature = $this->getSignatureKey($user->getMobileForOTPNotification());
+        $exist = $this->exists($user->getMobileForOTPNotification(), $indicator);
+        $signature = $this->getSignatureKey($user->getMobileForOTPNotification(), $indicator);
 
         return $exist && $this->cache->get($signature)['token'] === $token;
     }
 
-    protected function save(string $mobile, string $token): bool
+    protected function save(string $mobile, string $indicator, string $token): bool
     {
         return $this->cache->add(
-            $this->getSignatureKey($mobile),
-            $this->getPayload($mobile, $token),
+            $this->getSignatureKey($mobile, $indicator),
+            $this->getPayload($mobile, $indicator, $token),
             now()->addMinutes($this->expires)
         );
     }
 
-    protected function getSignatureKey($mobile): string
+    protected function getSignatureKey($mobile, string $indicator): string
     {
-        return $this->prefix.$mobile;
+        return sprintf('%s%s', $indicator, $mobile);
     }
 }

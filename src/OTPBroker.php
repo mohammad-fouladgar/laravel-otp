@@ -16,6 +16,8 @@ class OTPBroker
 {
     private array $channel;
 
+    private string $indicator;
+
     private ?string $token = null;
 
     private bool $onlyConfirm = false;
@@ -27,6 +29,7 @@ class OTPBroker
         private UserProviderResolver $providerResolver
     ) {
         $this->channel = $this->getDefaultChannel();
+        $this->indicator = $this->getDefaultIndicator();
         $this->userRepository = $this->resolveUserRepository();
     }
 
@@ -42,7 +45,7 @@ class OTPBroker
 
         $notifiable = $user ?? $this->makeNotifiable($mobile);
 
-        $this->token = $this->tokenRepository->create($notifiable);
+        $this->token = $this->tokenRepository->create($notifiable, $this->indicator);
 
         $notifiable->sendOTPNotification(
             $this->token,
@@ -77,6 +80,13 @@ class OTPBroker
         return $this;
     }
 
+    public function indicator(string $indicator): static
+    {
+        $this->indicator = $indicator;
+
+        return $this;
+    }
+
     public function getToken(): ?string
     {
         return $this->token;
@@ -101,7 +111,7 @@ class OTPBroker
 
     public function revoke(OTPNotifiable $user): bool
     {
-        return $this->tokenRepository->deleteExisting($user);
+        return $this->tokenRepository->deleteExisting($user, $this->indicator);
     }
 
     /**
@@ -126,7 +136,7 @@ class OTPBroker
 
     private function findUserByMobile(string $mobile): ?OTPNotifiable
     {
-        return $this->userRepository->findByMobile($mobile);
+        return $this->userRepository->findByMobile($mobile, $this->indicator);
     }
 
     private function getDefaultChannel(): array
@@ -138,12 +148,12 @@ class OTPBroker
 
     public function verifyToken(OTPNotifiable $user, string $token): bool
     {
-        return $this->tokenRepository->isTokenMatching($user, $token);
+        return $this->tokenRepository->isTokenMatching($user, $this->indicator, $token);
     }
 
     private function tokenExists(string $mobile): bool
     {
-        return $this->tokenRepository->exists($mobile);
+        return $this->tokenRepository->exists($mobile, $this->indicator);
     }
 
     private function makeNotifiable(string $mobile): OTPNotifiable
@@ -151,5 +161,10 @@ class OTPBroker
         $mobileColumn = config('otp.mobile_column');
 
         return $this->userRepository->getModel()->make([$mobileColumn => $mobile]);
+    }
+
+    private function getDefaultIndicator()
+    {
+        return config('otp.prefix');
     }
 }
