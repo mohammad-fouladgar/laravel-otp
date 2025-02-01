@@ -16,8 +16,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
         protected int                 $expires,
         protected int                 $tokenLength,
         protected string              $table
-    )
-    {
+    ) {
         parent::__construct($expires, $tokenLength);
     }
 
@@ -25,7 +24,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     {
         return (bool)optional($this->getTable()->where([
             'mobile' => $user->getMobileForOTPNotification(),
-            'indicator' => $indicator
+            'indicator' => $indicator,
         ]))->delete();
     }
 
@@ -43,7 +42,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     {
         $record = $this->getLatestRecord(['mobile' => $mobile, 'indicator' => $indicator]);
 
-        return $record && !$this->tokenExpired($record['expires_at']);
+        return $record && ! $this->tokenExpired($record['expires_at']);
     }
 
     public function isTokenMatching(OTPNotifiable $user, string $indicator, string $token): bool
@@ -54,7 +53,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
             'indicator' => $indicator,
         ]);
 
-        return $record && !$this->tokenExpired($record['expires_at']);
+        return $record && ! $this->tokenExpired($record['expires_at']);
     }
 
     protected function getTable(): Builder
