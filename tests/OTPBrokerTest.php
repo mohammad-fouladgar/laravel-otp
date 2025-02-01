@@ -9,7 +9,6 @@ use Fouladgar\OTP\Notifications\OTPNotification;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
-use Throwable;
 
 class OTPBrokerTest extends TestCase
 {
@@ -76,7 +75,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+            fn (OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
         );
     }
 
@@ -93,7 +92,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == $useChannels
+            fn (OTPNotification $notification, $channels) => $channels == $useChannels
         );
     }
 
@@ -109,7 +108,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
+            fn (OTPNotification $notification, $channels) => $channels == ['otp_sms']
         );
     }
 
@@ -125,7 +124,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+            fn (OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
         );
     }
 
@@ -278,7 +277,8 @@ class OTPBrokerTest extends TestCase
         $this->assertNotEmpty(Cache::get(self::MOBILE));
 
         $user = OTP()->onlyConfirmToken()->indicator($secondIndicator)->validate(
-            self::MOBILE, Cache::get($secondIndicator . self::MOBILE)['token']
+            self::MOBILE,
+            Cache::get($secondIndicator . self::MOBILE)['token']
         );
 
         $this->assertInstanceOf(OTPNotifiable::class, $user);
