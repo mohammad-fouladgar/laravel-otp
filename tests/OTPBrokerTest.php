@@ -9,6 +9,7 @@ use Fouladgar\OTP\Notifications\OTPNotification;
 use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use Throwable;
 
 class OTPBrokerTest extends TestCase
 {
@@ -75,7 +76,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn (OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
         );
     }
 
@@ -92,7 +93,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn (OTPNotification $notification, $channels) => $channels == $useChannels
+            fn(OTPNotification $notification, $channels) => $channels == $useChannels
         );
     }
 
@@ -108,7 +109,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn (OTPNotification $notification, $channels) => $channels == ['otp_sms']
+            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
         );
     }
 
@@ -124,7 +125,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentTo(
             $user,
-            fn (OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
         );
     }
 
@@ -226,8 +227,8 @@ class OTPBrokerTest extends TestCase
     }
 
     /**
-    * @test
-    */
+     * @test
+     */
     public function it_can_only_confirm_token_and_does_not_create_user(): void
     {
         $otp = OTP();
@@ -239,5 +240,85 @@ class OTPBrokerTest extends TestCase
         $this->assertInstanceOf(OTPNotifiable::class, $user);
 
         $this->assertEquals(0, OTPNotifiableUser::count());
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_send_otp_with_custom_indicator(): void
+    {
+        Notification::fake();
+
+        $indicator = 'customIndicator_';
+
+        $user = OTP()->indicator($indicator)->send(self::MOBILE);
+
+        Notification::assertSentTo(
+            $user,
+            OTPNotification::class
+        );
+
+        $this->assertNotEmpty(Cache::get($indicator . self::MOBILE));
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_set_multiple_indicators(): void
+    {
+        $firstIndicator = 'firstIndicator_';
+        $secondIndicator = 'secondIndicator_';
+
+        OTP()->indicator($firstIndicator)->send(self::MOBILE);
+        OTP()->indicator($secondIndicator)->send(self::MOBILE);
+        OTP()->send(self::MOBILE);
+
+        $this->assertNotEmpty(Cache::get($firstIndicator . self::MOBILE));
+        $this->assertNotEmpty(Cache::get($secondIndicator . self::MOBILE));
+        $this->assertNotEmpty(Cache::get(self::MOBILE));
+
+        $user = OTP()->onlyConfirmToken()->indicator($secondIndicator)->validate(
+            self::MOBILE, Cache::get($secondIndicator . self::MOBILE)['token']
+        );
+
+        $this->assertInstanceOf(OTPNotifiable::class, $user);
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_validate_token_with_custom_indicator(): void
+    {
+        Notification::fake();
+
+        $indicator = 'customIndicator_';
+
+        OTP()->indicator($indicator)->send(self::MOBILE);
+
+        $token = Cache::get($indicator . self::MOBILE)['token'];
+
+        $this->assertNotEmpty(Cache::get($indicator . self::MOBILE));
+
+        $user = OTP()->indicator($indicator)->validate(self::MOBILE, $token);
+
+        $this->assertInstanceOf(OTPNotifiable::class, $user);
+    }
+
+    /**
+     * @test
+     */
+    public function it_can_not_validate_without_custom_indicator(): void
+    {
+        $firstIndicator = 'firstIndicator_';
+
+        OTP()->indicator($firstIndicator)->send(self::MOBILE);
+
+        $this->assertNotEmpty(Cache::get($firstIndicator.self::MOBILE));
+
+        $token = Cache::get($firstIndicator . self::MOBILE)['token'];
+
+        $this->expectException(OTPException::class);
+
+        OTP()->onlyConfirmToken()->validate(self::MOBILE, $token);
     }
 }
