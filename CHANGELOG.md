@@ -1,3 +1,6 @@
+## 5.2.0 - 2025-02-01
+ - Add support custom indicator for managing multiple OTP tokens
+
 ## 5.1.0 - 2025-01-27
  - Fix exception message handling
 
