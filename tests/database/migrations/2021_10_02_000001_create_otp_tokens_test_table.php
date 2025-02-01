@@ -14,6 +14,7 @@ class CreateOtpTokensTestTable extends Migration
             $table->string('token', 10)->index();
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('expires_at')->nullable();
+            $table->string('indicator')->default('otp_');
 
             $table->index(['mobile', 'token']);
         });

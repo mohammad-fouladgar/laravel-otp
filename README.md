@@ -72,6 +72,18 @@ OTP()->useProvider('users')
 */
 OTP()->onlyConfirmToken()   
      ->validate('+98900000000', 'token_123');
+
+/*
+|--------------------------------------------------------------------------
+| You may wish to use a custom indicator
+|--------------------------------------------------------------------------
+*/
+OTP()->indicator('custom_indicator')   
+     ->send('+98900000000');
+     
+OTP()->indicator('custom_indicator')
+     ->onlyConfirmToken() 
+     ->validate('+98900000000', 'token_123');
 ```
 ## Installation
 
