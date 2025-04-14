@@ -10,6 +10,8 @@ class OTPMessage
 
     private string $from = '';
 
+    private mixed $template = null;
+
     public function content(string $content): static
     {
         $this->content = $content;
@@ -31,8 +33,15 @@ class OTPMessage
         return $this;
     }
 
+    public function template(mixed $template): static
+    {
+        $this->template = $template;
+
+        return $this;
+    }
+
     public function getPayload(): MessagePayload
     {
-        return (new MessagePayload($this->to, $this->content, $this->from));
+        return (new MessagePayload($this->to, $this->content, $this->from, $this->template));
     }
 }
