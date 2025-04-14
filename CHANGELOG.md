@@ -1,3 +1,6 @@
+## 5.3.0 - 2025-04-14
+ - add support template for `OTPMessage`
+
 ## 5.2.0 - 2025-02-01
  - Add support custom indicator for managing multiple OTP tokens
 
