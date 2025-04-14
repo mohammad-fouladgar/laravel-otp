@@ -4,7 +4,12 @@ namespace Fouladgar\OTP\Notifications\Messages;
 
 class MessagePayload
 {
-    public function __construct(private string $to, private string $content, private string $from = '')
+    public function __construct(
+        private string $to,
+        private string $content,
+        private string $from = '',
+        private mixed $template = null
+    )
     {
     }
 
@@ -21,5 +26,10 @@ class MessagePayload
     public function from(): string
     {
         return $this->from;
+    }
+
+    public function template(): mixed
+    {
+        return $this->template;
     }
 }
