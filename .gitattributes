@@ -17,3 +17,4 @@
 /CONTRIBUTING.md    export-ignore
 /bump-version.sh    export-ignore
 /.github            export-ignore
+.phpunit.cache

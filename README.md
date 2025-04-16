@@ -1,4 +1,5 @@
 # Laravel OTP(One-Time Password)
+
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/fouladgar/laravel-otp.svg)](https://packagist.org/packages/fouladgar/laravel-otp)
 ![Test Status](https://img.shields.io/github/actions/workflow/status/mohammad-fouladgar/laravel-otp/run-tests.yml?label=tests)
 ![Code Style Status](https://img.shields.io/github/actions/workflow/status/mohammad-fouladgar/laravel-otp/php-cs-fixer.yml?label=code%20style)
@@ -11,14 +12,16 @@ send/resend and validate OTP for users authentication with user-friendly methods
 
 ## Version Compatibility
 
-Laravel  | Laravel-OTP
-:---------|:----------
-11.0.x         | 4.2.x
-10.0.x         | 4.0.x
-9.0.x          | 3.0.x
-6.0.x to 8.0.x | 1.0.x
+| Laravel        | Laravel-OTP |
+|:---------------|:------------|
+| 12.0.x         | 4.4.x       |
+| 11.0.x         | 4.2.x       |
+| 10.0.x         | 4.0.x       |
+| 9.0.x          | 3.0.x       |
+| 6.0.x to 8.0.x | 1.0.x       |
 
 ## Basic Usage:
+
 ```php
 <?php
 
@@ -85,6 +88,7 @@ OTP()->indicator('custom_indicator')
      ->onlyConfirmToken() 
      ->validate('+98900000000', 'token_123');
 ```
+
 ## Installation
 
 You can install the package via composer:
@@ -129,7 +133,8 @@ one yet or have not planned to do it you can use `database` instead.
 
 It means after migrating, a table will be created which your application needs to store verification tokens.
 
-> If you’re using another column name for `mobile` phone or even `otp_tokens` table, you can customize their values in config file:
+> If you’re using another column name for `mobile` phone or even `otp_tokens` table, you can customize their values in
+> config file:
 
 ```php
 // config/otp.php
@@ -156,10 +161,13 @@ All right! Now you should migrate the database:
 php artisan migrate
 ```
 
-> **Note:** When you are using OTP to login user, consider all columns must be nullable except for the `mobile` column. Because, after verifying OTP, a user record will be created if the user does not exist.
+> **Note:** When you are using OTP to login user, consider all columns must be nullable except for the `mobile` column.
+> Because, after verifying OTP, a user record will be created if the user does not exist.
 
 ### Token Life Time
-You can specify an OTP `token_lifetime`, ensuring that once an OTP token is sent to the user, no new OTP token will be generated or sent until the current token has expired.
+
+You can specify an OTP `token_lifetime`, ensuring that once an OTP token is sent to the user, no new OTP token will be
+generated or sent until the current token has expired.
 
 ```php
 // config/otp.php
@@ -175,6 +183,7 @@ return [
     //...
 ];
 ```
+
 ### User providers
 
 You may wish to use the OTP for variant users. Laravel OTP allows you to define and manage many user providers that you
@@ -207,7 +216,8 @@ return [
 ];
 ```
 
-> **Note:** You may also change the default repository and replace your own repository. however, every repository must implement `Fouladgar\OTP\Contracts\NotifiableRepositoryInterface` interface.
+> **Note:** You may also change the default repository and replace your own repository. however, every repository must
+> implement `Fouladgar\OTP\Contracts\NotifiableRepositoryInterface` interface.
 
 #### Model Preparation
 
@@ -356,7 +366,8 @@ return [
 ];
 ```
 
-> **Note:** If you change the default sms channel, the `sms_client` will be an optional config. Otherwise, you must define your sms client.
+> **Note:** If you change the default sms channel, the `sms_client` will be an optional config. Otherwise, you must
+> define your sms client.
 
 ### Notification SMS and Email Customization
 
@@ -382,7 +393,8 @@ public function boot()
     // SMS Customization
     OTPNotification::toSMSUsing(fn($notifiable, $token) =>(new OTPMessage())
                     ->to($notifiable->mobile)
-                    ->content('Your OTP Token is: '.$token));
+                    ->content('Your OTP Token is: '.$token))
+                    ->template('OTP_TEMPLATE');
 
     //Email Customization
     OTPNotification::toMailUsing(fn ($notifiable, $token) =>(new MailMessage)
