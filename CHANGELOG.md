@@ -1,5 +1,8 @@
+## 5.5.0 - 2025-04-16
+ - Add support Laravel 12
+
 ## 5.3.0 - 2025-04-14
- - add support template for `OTPMessage`
+ - Add support template for `OTPMessage`
 
 ## 5.2.0 - 2025-02-01
  - Add support custom indicator for managing multiple OTP tokens
