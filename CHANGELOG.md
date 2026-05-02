@@ -1,3 +1,6 @@
+## 5.6.0 - 2025-04-16
+ - Add support Laravel 13
+
 ## 5.5.0 - 2025-04-16
  - Add support Laravel 12
 
