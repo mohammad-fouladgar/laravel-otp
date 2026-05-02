@@ -9,8 +9,7 @@ class MessagePayload
         private string $content,
         private string $from = '',
         private mixed $template = null
-    )
-    {
+    ) {
     }
 
     public function to(): string
