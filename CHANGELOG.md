@@ -1,3 +1,9 @@
+## 5.7.0 - 2026-05-02
+ - Bumped version to 5.6.0
+ - bumped version to 5.6.0
+ - Bumped version to 5.6.0
+ - L13 support
+
 ## 5.6.0 - 2025-04-16
  - Add support Laravel 13
 
