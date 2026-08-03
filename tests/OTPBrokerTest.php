@@ -25,7 +25,7 @@ class OTPBrokerTest extends TestCase
     }
 
     #[Test]
-    public function it_can_send_without_notifying(): void
+    public function it_can_send_with_notifications_disabled(): void
     {
         Notification::fake();
         config()->set('otp.channel', null);
@@ -40,7 +40,7 @@ class OTPBrokerTest extends TestCase
     }
 
     #[Test]
-    public function it_can_validate_a_token_created_without_notifying(): void
+    public function it_can_validate_a_token_created_with_notifications_disabled(): void
     {
         OTP()->withNotify(false)->send(self::RECIPIENT);
 
@@ -56,7 +56,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor('otp') === self::RECIPIENT
+            fn ($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor('otp') === self::RECIPIENT
         );
     }
 
@@ -69,7 +69,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+            fn (OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
         );
     }
 
@@ -83,7 +83,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == $useChannels
+            fn (OTPNotification $notification, $channels) => $channels == $useChannels
         );
     }
 
@@ -96,7 +96,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor(OTPSMSChannel::class) === self::RECIPIENT
+            fn ($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor(OTPSMSChannel::class) === self::RECIPIENT
                 && $notifiable->routeNotificationFor('mail') === self::RECIPIENT
         );
     }
@@ -110,7 +110,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
+            fn (OTPNotification $notification, $channels) => $channels == ['otp_sms']
         );
     }
 
@@ -123,7 +123,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+            fn (OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
         );
     }
 
@@ -227,7 +227,7 @@ class OTPBrokerTest extends TestCase
     }
 
     #[Test]
-    public function it_can_not_validate_without_custom_purpose(): void
+    public function it_cannot_validate_a_custom_purpose_token_without_the_same_purpose(): void
     {
         Notification::fake();
 

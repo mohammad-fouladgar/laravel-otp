@@ -33,4 +33,17 @@ class OTPFacadeTest extends TestCase
 
         OTP::validate(self::RECIPIENT, 'invalid_token');
     }
+
+    #[Test]
+    public function it_can_disable_notifications_via_the_facade(): void
+    {
+        Notification::fake();
+        config()->set('otp.channel', null);
+        config()->set('otp.token_storage', 'cache');
+
+        $this->assertTrue(OTP::withNotify(false)->send(self::RECIPIENT));
+
+        Notification::assertNothingSent();
+        $this->assertNotEmpty(Cache::get(config('otp.prefix') . self::RECIPIENT));
+    }
 }

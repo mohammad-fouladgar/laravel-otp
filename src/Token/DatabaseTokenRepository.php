@@ -15,8 +15,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
         protected int                 $expires,
         protected int                 $tokenLength,
         protected string              $table
-    )
-    {
+    ) {
         parent::__construct($expires, $tokenLength);
     }
 
@@ -42,7 +41,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     {
         $record = $this->getLatestRecord(['recipient' => $recipient, 'purpose' => $purpose]);
 
-        return $record && !$this->tokenExpired($record['expires_at']);
+        return $record && ! $this->tokenExpired($record['expires_at']);
     }
 
     public function isTokenMatching(string $recipient, string $purpose, string $token): bool
@@ -53,7 +52,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
             'purpose' => $purpose,
         ]);
 
-        return $record && !$this->tokenExpired($record['expires_at']);
+        return $record && ! $this->tokenExpired($record['expires_at']);
     }
 
     protected function getTable(): Builder

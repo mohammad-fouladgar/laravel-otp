@@ -28,10 +28,10 @@ class OTPEventsTest extends TestCase
 
         $this->assertTrue(OTP()->send(self::RECIPIENT));
 
-        Event::assertDispatched(CreatingToken::class, fn($event) => $event->recipient === self::RECIPIENT);
-        Event::assertDispatched(TokenCreated::class, fn($event) => $event->recipient === self::RECIPIENT && !empty($event->token));
-        Event::assertDispatched(SendingNotification::class, fn($event) => $event->recipient === self::RECIPIENT);
-        Event::assertDispatched(NotificationSent::class, fn($event) => $event->recipient === self::RECIPIENT);
+        Event::assertDispatched(CreatingToken::class, fn ($event) => $event->recipient === self::RECIPIENT);
+        Event::assertDispatched(TokenCreated::class, fn ($event) => $event->recipient === self::RECIPIENT && ! empty($event->token));
+        Event::assertDispatched(SendingNotification::class, fn ($event) => $event->recipient === self::RECIPIENT);
+        Event::assertDispatched(NotificationSent::class, fn ($event) => $event->recipient === self::RECIPIENT);
         Event::assertNotDispatched(TokenCreationFailed::class);
     }
 
@@ -58,7 +58,7 @@ class OTPEventsTest extends TestCase
     public function it_can_cancel_token_creation_via_a_listener(): void
     {
         Notification::fake();
-        Event::listen(CreatingToken::class, fn() => false);
+        Event::listen(CreatingToken::class, fn () => false);
 
         $this->assertFalse(OTP()->send(self::RECIPIENT));
 
@@ -70,7 +70,7 @@ class OTPEventsTest extends TestCase
     public function it_can_skip_the_built_in_notification_via_a_listener(): void
     {
         Notification::fake();
-        Event::listen(SendingNotification::class, fn() => false);
+        Event::listen(SendingNotification::class, fn () => false);
 
         $this->assertTrue(OTP()->send(self::RECIPIENT));
 
@@ -90,8 +90,8 @@ class OTPEventsTest extends TestCase
 
         $this->assertTrue(OTP()->validate(self::RECIPIENT, $token));
 
-        Event::assertDispatched(TokenValidated::class, fn($event) => $event->recipient === self::RECIPIENT);
-        Event::assertDispatched(TokenRevoked::class, fn($event) => $event->recipient === self::RECIPIENT);
+        Event::assertDispatched(TokenValidated::class, fn ($event) => $event->recipient === self::RECIPIENT);
+        Event::assertDispatched(TokenRevoked::class, fn ($event) => $event->recipient === self::RECIPIENT);
     }
 
     #[Test]
@@ -104,7 +104,7 @@ class OTPEventsTest extends TestCase
         try {
             OTP()->validate(self::RECIPIENT, 'invalid_token');
         } finally {
-            Event::assertDispatched(TokenValidationFailed::class, fn($event) => $event->recipient === self::RECIPIENT);
+            Event::assertDispatched(TokenValidationFailed::class, fn ($event) => $event->recipient === self::RECIPIENT);
             Event::assertNotDispatched(TokenValidated::class);
         }
     }
@@ -119,7 +119,7 @@ class OTPEventsTest extends TestCase
 
         $this->assertTrue(OTP()->revoke(self::RECIPIENT));
 
-        Event::assertDispatched(TokenRevoked::class, fn($event) => $event->recipient === self::RECIPIENT);
+        Event::assertDispatched(TokenRevoked::class, fn ($event) => $event->recipient === self::RECIPIENT);
     }
 
     #[Test]

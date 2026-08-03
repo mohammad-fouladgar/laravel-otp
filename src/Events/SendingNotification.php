@@ -10,7 +10,6 @@ readonly class SendingNotification
         public string $recipient,
         public string $token,
         public array $channels
-    )
-    {
+    ) {
     }
 }
