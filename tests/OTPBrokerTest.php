@@ -25,7 +25,7 @@ class OTPBrokerTest extends TestCase
     }
 
     #[Test]
-    public function it_can_send_without_notifying(): void
+    public function it_can_send_with_notifications_disabled(): void
     {
         Notification::fake();
         config()->set('otp.channel', null);
@@ -40,7 +40,7 @@ class OTPBrokerTest extends TestCase
     }
 
     #[Test]
-    public function it_can_validate_a_token_created_without_notifying(): void
+    public function it_can_validate_a_token_created_with_notifications_disabled(): void
     {
         OTP()->withNotify(false)->send(self::RECIPIENT);
 
@@ -227,7 +227,7 @@ class OTPBrokerTest extends TestCase
     }
 
     #[Test]
-    public function it_can_not_validate_without_custom_purpose(): void
+    public function it_cannot_validate_a_custom_purpose_token_without_the_same_purpose(): void
     {
         Notification::fake();
 
