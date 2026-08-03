@@ -4,11 +4,18 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP;
 
-use Exception;
-use Fouladgar\OTP\Contracts\NotifiableRepositoryInterface;
-use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
+use Fouladgar\OTP\Events\CreatingToken;
+use Fouladgar\OTP\Events\NotificationSent;
+use Fouladgar\OTP\Events\SendingNotification;
+use Fouladgar\OTP\Events\TokenCreated;
+use Fouladgar\OTP\Events\TokenCreationFailed;
+use Fouladgar\OTP\Events\TokenRevoked;
+use Fouladgar\OTP\Events\TokenValidated;
+use Fouladgar\OTP\Events\TokenValidationFailed;
 use Fouladgar\OTP\Exceptions\OTPException;
+use Fouladgar\OTP\Notifications\OTPNotification;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Arr;
 use Throwable;
 
@@ -16,73 +23,79 @@ class OTPBroker
 {
     private array $channel;
 
-    private string $indicator;
+    private string $purpose;
 
     private ?string $token = null;
 
-    private bool $onlyConfirm = false;
+    private ?bool $withNotify = null;
 
-    private NotifiableRepositoryInterface $userRepository;
-
-    public function __construct(
-        private TokenRepositoryInterface $tokenRepository,
-        private UserProviderResolver $providerResolver
-    ) {
+    public function __construct(private readonly TokenRepositoryInterface $tokenRepository)
+    {
         $this->channel = $this->getDefaultChannel();
-        $this->indicator = $this->getDefaultIndicator();
-        $this->userRepository = $this->resolveUserRepository();
+        $this->purpose = $this->getDefaultPurpose();
     }
 
     /**
      * @throws Throwable
      */
-    public function send(string $mobile, bool $userExists = false): OTPNotifiable
+    public function send(string $recipient): bool
     {
-        $user = $userExists ? $this->findUserByMobile($mobile) : null;
+        throw_if($this->shouldNotify() && empty($this->channel), OTPException::whenChannelIsNotConfigured());
 
-        throw_if(! $user && $userExists, OTPException::whenUserNotFoundByMobile());
-        throw_if($this->tokenExists($mobile), OTPException::whenOtpAlreadySent());
+        if ($this->tokenExists($recipient)) {
+            event(new TokenCreationFailed($recipient, $this->purpose));
 
-        $notifiable = $user ?? $this->makeNotifiable($mobile);
+            throw OTPException::whenOtpAlreadySent();
+        }
 
-        $this->token = $this->tokenRepository->create($notifiable, $this->indicator);
+        if (event(new CreatingToken($recipient, $this->purpose), [], true) === false) {
+            return false;
+        }
 
-        $notifiable->sendOTPNotification(
-            $this->token,
-            $this->channel
-        );
+        $this->token = $this->tokenRepository->create($recipient, $this->purpose);
 
-        return $notifiable;
+        event(new TokenCreated($recipient, $this->token, $this->purpose));
+
+        if ($this->shouldNotify()) {
+            $this->sendNotification($recipient, $this->token);
+        }
+
+        return true;
     }
 
     /**
      * @throws OTPException|Throwable
      */
-    public function validate(string $mobile, string $token, bool $create = true): OTPNotifiable
+    public function validate(string $recipient, string $token): bool
     {
-        $notifiable = $this->makeNotifiable($mobile);
+        if (!$this->isTokenMatching($recipient, $token)) {
+            event(new TokenValidationFailed($recipient, $this->purpose));
 
-        throw_unless($this->verifyToken($notifiable, $token), OTPException::whenOtpTokenIsInvalid());
-
-        if (! $this->onlyConfirm) {
-            $notifiable = $this->find($mobile, $create);
+            throw OTPException::whenOtpTokenIsInvalid();
         }
 
-        $this->revoke($notifiable);
+        event(new TokenValidated($recipient, $this->purpose));
 
-        return $notifiable;
+        $this->revoke($recipient);
+
+        return true;
     }
 
-    public function onlyConfirmToken(bool $confirm = true): static
+    public function withNotify(bool $withNotify = true): static
     {
-        $this->onlyConfirm = $confirm;
+        $this->withNotify = $withNotify;
 
         return $this;
     }
 
-    public function indicator(string $indicator): static
+    public function fake(string $recipient, ?string $token = null, ?string $purpose = null): string
     {
-        $this->indicator = $indicator;
+        return $this->token = $this->tokenRepository->create($recipient, $purpose ?? $this->purpose, $token);
+    }
+
+    public function purpose(string $purpose): static
+    {
+        $this->purpose = $purpose;
 
         return $this;
     }
@@ -92,16 +105,6 @@ class OTPBroker
         return $this->token;
     }
 
-    /**
-     * @throws Exception
-     */
-    public function useProvider(string $name = null): OTPBroker
-    {
-        $this->userRepository = $this->resolveUserRepository($name);
-
-        return $this;
-    }
-
     public function channel($channel = ['']): static
     {
         $this->channel = is_array($channel) ? $channel : func_get_args();
@@ -109,34 +112,44 @@ class OTPBroker
         return $this;
     }
 
-    public function revoke(OTPNotifiable $user): bool
+    public function revoke(string $recipient): bool
     {
-        return $this->tokenRepository->deleteExisting($user, $this->indicator);
+        $revoked = $this->tokenRepository->deleteExisting($recipient, $this->purpose);
+
+        if ($revoked) {
+            event(new TokenRevoked($recipient, $this->purpose));
+        }
+
+        return $revoked;
     }
 
-    /**
-     * @throws \Exception
-     */
-    protected function resolveUserRepository(string $name = null): NotifiableRepositoryInterface
+    private function isTokenMatching(string $recipient, string $token): bool
     {
-        return $this->providerResolver->resolve($name);
+        return $this->tokenRepository->isTokenMatching($recipient, $this->purpose, $token);
     }
 
-    private function find(string $mobile, bool $create = true): ?OTPNotifiable
+    private function sendNotification(string $recipient, string $token): void
     {
-        return $create ?
-            $this->findOrCreateUser($mobile) :
-            $this->findUserByMobile($mobile);
+        if (event(new SendingNotification($recipient, $token, $this->channel), [], true) === false) {
+            return;
+        }
+
+        $this->notify($recipient, $token);
+
+        event(new NotificationSent($recipient, $token, $this->channel));
     }
 
-    private function findOrCreateUser(string $mobile): OTPNotifiable
+    private function notify(string $recipient, string $token): void
     {
-        return $this->userRepository->findOrCreateByMobile($mobile);
-    }
+        $notifiable = new AnonymousNotifiable();
 
-    private function findUserByMobile(string $mobile): ?OTPNotifiable
-    {
-        return $this->userRepository->findByMobile($mobile, $this->indicator);
+        foreach ($this->channel as $channel) {
+            $notifiable->route($channel, $recipient);
+        }
+
+        $notifiable
+            ->route('otp', $recipient)
+            ->notify(new OTPNotification($recipient, $token, $this->channel));
     }
 
     private function getDefaultChannel(): array
@@ -146,25 +159,18 @@ class OTPBroker
         return is_array($channel) ? $channel : Arr::wrap($channel);
     }
 
-    public function verifyToken(OTPNotifiable $user, string $token): bool
+    private function tokenExists(string $recipient): bool
     {
-        return $this->tokenRepository->isTokenMatching($user, $this->indicator, $token);
+        return $this->tokenRepository->exists($recipient, $this->purpose);
     }
 
-    private function tokenExists(string $mobile): bool
-    {
-        return $this->tokenRepository->exists($mobile, $this->indicator);
-    }
-
-    private function makeNotifiable(string $mobile): OTPNotifiable
-    {
-        $mobileColumn = config('otp.mobile_column');
-
-        return $this->userRepository->getModel()->make([$mobileColumn => $mobile]);
-    }
-
-    private function getDefaultIndicator()
+    private function getDefaultPurpose()
     {
         return config('otp.prefix');
+    }
+
+    private function shouldNotify(): bool
+    {
+        return $this->withNotify ?? config('otp.with_notify', true);
     }
 }

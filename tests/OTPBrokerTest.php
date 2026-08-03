@@ -2,323 +2,245 @@
 
 namespace Fouladgar\OTP\Tests;
 
-use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Exceptions\OTPException;
 use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
 use Fouladgar\OTP\Notifications\OTPNotification;
-use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
+use PHPUnit\Framework\Attributes\Test;
 
 class OTPBrokerTest extends TestCase
 {
-    protected const MOBILE = '09389599530';
+    protected const RECIPIENT = '09389599530';
 
-    public function setUp(): void
+    #[Test]
+    public function it_can_not_send_when_no_channel_is_configured(): void
     {
-        parent::setUp();
+        config()->set('otp.channel', null);
 
-        config()->set('otp.user_providers.users.model', OTPNotifiableUser::class);
-    }
-
-    /**
-     * @test
-     */
-    public function it_can_send_token_to_an_exist_user(): void
-    {
-        Notification::fake();
-
-        $user = OTPNotifiableUser::factory()->create();
-        $this->assertInstanceOf(OTPNotifiable::class, OTP()->send($user->mobile, true));
-
-        Notification::assertSentTo(
-            $user,
-            OTPNotification::class
-        );
-    }
-
-    /**
-     * @test
-     */
-    public function it_can_throw_not_found_if_user_exists_is_true(): void
-    {
         $this->expectException(OTPException::class);
 
-        OTP()->send(self::MOBILE, true);
+        OTP()->send(self::RECIPIENT);
     }
 
-    /**
-     * @test
-     */
-    public function it_can_send_token_to_user_that_does_not_exist(): void
+    #[Test]
+    public function it_can_send_without_notifying(): void
+    {
+        Notification::fake();
+        config()->set('otp.channel', null);
+        config()->set('otp.token_storage', 'cache');
+
+        $this->assertTrue(OTP()->withNotify(false)->send(self::RECIPIENT));
+
+        Notification::assertNothingSent();
+        $signature = config('otp.prefix', 'otp_') . self::RECIPIENT;
+
+        $this->assertNotEmpty(Cache::get($signature));
+    }
+
+    #[Test]
+    public function it_can_validate_a_token_created_without_notifying(): void
+    {
+        OTP()->withNotify(false)->send(self::RECIPIENT);
+
+        $this->assertTrue(OTP()->validate(self::RECIPIENT, Cache::get(self::RECIPIENT)['token']));
+    }
+
+    #[Test]
+    public function it_can_send_token_successfully(): void
     {
         Notification::fake();
 
-        $user = OTP(self::MOBILE);
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
+        $this->assertTrue(OTP(self::RECIPIENT));
 
-        Notification::assertSentTo(
-            $user,
-            OTPNotification::class
+        Notification::assertSentOnDemand(
+            OTPNotification::class,
+            fn($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor('otp') === self::RECIPIENT
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_send_token_with_using_default_channel(): void
     {
         Notification::fake();
 
-        $user = OTP()->send(self::MOBILE);
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
+        $this->assertTrue(OTP()->send(self::RECIPIENT));
 
-        Notification::assertSentTo(
-            $user,
-            fn (OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+        Notification::assertSentOnDemand(
+            OTPNotification::class,
+            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_send_token_with_using_specified_channels(): void
     {
         Notification::fake();
 
         $useChannels = [OTPSMSChannel::class, 'mail'];
-        $user = OTP(self::MOBILE, $useChannels);
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
+        $this->assertTrue(OTP(self::RECIPIENT, $useChannels));
 
-        Notification::assertSentTo(
-            $user,
-            fn (OTPNotification $notification, $channels) => $channels == $useChannels
+        Notification::assertSentOnDemand(
+            OTPNotification::class,
+            fn(OTPNotification $notification, $channels) => $channels == $useChannels
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
+    public function it_routes_the_recipient_to_every_configured_channel(): void
+    {
+        Notification::fake();
+
+        $this->assertTrue(OTP(self::RECIPIENT, [OTPSMSChannel::class, 'mail']));
+
+        Notification::assertSentOnDemand(
+            OTPNotification::class,
+            fn($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor(OTPSMSChannel::class) === self::RECIPIENT
+                && $notifiable->routeNotificationFor('mail') === self::RECIPIENT
+        );
+    }
+
+    #[Test]
     public function it_can_send_token_with_using_extended_channel(): void
     {
         Notification::fake();
 
-        $user = OTP()->channel('otp_sms')->send(self::MOBILE);
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
+        $this->assertTrue(OTP()->channel('otp_sms')->send(self::RECIPIENT));
 
-        Notification::assertSentTo(
-            $user,
-            fn (OTPNotification $notification, $channels) => $channels == ['otp_sms']
+        Notification::assertSentOnDemand(
+            OTPNotification::class,
+            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_send_token_with_using_custom_channel(): void
     {
         Notification::fake();
 
-        $user = OTP(self::MOBILE, [CustomOTPChannel::class]);
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
+        $this->assertTrue(OTP(self::RECIPIENT, [CustomOTPChannel::class]));
 
-        Notification::assertSentTo(
-            $user,
-            fn (OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+        Notification::assertSentOnDemand(
+            OTPNotification::class,
+            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_not_validate_a_token_when_token_is_expired_or_invalid(): void
     {
-        $user = OTPNotifiableUser::factory()->create();
-
         $this->expectException(OTPException::class);
 
-        OTP()->validate($user->mobile, '12345');
+        OTP()->validate(self::RECIPIENT, '12345');
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_validate_a_valid_token(): void
     {
-        $user = OTPNotifiableUser::factory()->create();
+        Notification::fake();
 
-        OTP()->send($user->mobile);
+        OTP()->send(self::RECIPIENT);
 
-        $user = OTP()->validate($user->mobile, Cache::get($user->mobile)['token']);
-
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
+        $this->assertTrue(OTP()->validate(self::RECIPIENT, Cache::get(self::RECIPIENT)['token']));
 
         // Database Storage
         config()->set('otp.token_storage', 'database');
         $otp = OTP();
-        $otp->send($user->mobile);
-        $this->assertInstanceOf(OTPNotifiable::class, OTP($user->mobile, $otp->getToken()));
+        $otp->send(self::RECIPIENT);
+        $this->assertTrue(OTP(self::RECIPIENT, $otp->getToken()));
     }
 
-    /**
-     * @test
-     */
-    public function it_can_validate_a_valid_token_and_then_create_user(): void
-    {
-        $otp = OTP();
-
-        $otp->send(self::MOBILE, false);
-
-        $user = $otp->validate(self::MOBILE, Cache::get(self::MOBILE)['token'], true);
-
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
-    }
-
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_revoke_a_token_successfully(): void
     {
-        $user = OTPNotifiableUser::factory()->create();
+        Notification::fake();
 
-        OTP($user->mobile);
+        OTP(self::RECIPIENT);
 
-        $this->assertTrue(OTP()->revoke($user));
-        $this->assertFalse(OTP()->revoke($user));
+        $this->assertTrue(OTP()->revoke(self::RECIPIENT));
+        $this->assertFalse(OTP()->revoke(self::RECIPIENT));
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function it_can_not_send_otp_when_already_sent(): void
     {
         $this->expectException(OTPException::class);
 
         Notification::fake();
 
-        $user = OTP(self::MOBILE);
+        OTP(self::RECIPIENT);
 
-        $this->assertInstanceOf(OTPNotifiable::class, OTP()->useProvider('users')->send($user->mobile));
-
-        Notification::assertSentTo(
-            $user,
-            OTPNotification::class
-        );
+        OTP()->send(self::RECIPIENT);
     }
 
-    /**
-     * @test
-     */
-    public function it_can_send_by_using_provider(): void
+    #[Test]
+    public function it_can_send_otp_with_custom_purpose(): void
     {
         Notification::fake();
 
-        $otp = OTP();
+        $purpose = 'customPurpose_';
 
-        $user = $otp->send(self::MOBILE, false);
+        $this->assertTrue(OTP()->purpose($purpose)->send(self::RECIPIENT));
 
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
-
-        Notification::assertSentTo(
-            $user,
-            OTPNotification::class
-        );
+        $this->assertNotEmpty(Cache::get($purpose . self::RECIPIENT));
     }
 
-    /**
-     * @test
-     */
-    public function it_can_only_confirm_token_and_does_not_create_user(): void
-    {
-        $otp = OTP();
-
-        $otp->send(self::MOBILE, false);
-
-        $user = $otp->onlyConfirmToken()->validate(self::MOBILE, Cache::get(self::MOBILE)['token']);
-
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
-
-        $this->assertEquals(0, OTPNotifiableUser::count());
-    }
-
-    /**
-     * @test
-     */
-    public function it_can_send_otp_with_custom_indicator(): void
+    #[Test]
+    public function it_can_set_multiple_purposes(): void
     {
         Notification::fake();
 
-        $indicator = 'customIndicator_';
+        $firstPurpose = 'firstPurpose_';
+        $secondPurpose = 'secondPurpose_';
 
-        $user = OTP()->indicator($indicator)->send(self::MOBILE);
+        OTP()->purpose($firstPurpose)->send(self::RECIPIENT);
+        OTP()->purpose($secondPurpose)->send(self::RECIPIENT);
+        OTP()->send(self::RECIPIENT);
 
-        Notification::assertSentTo(
-            $user,
-            OTPNotification::class
+        $this->assertNotEmpty(Cache::get($firstPurpose . self::RECIPIENT));
+        $this->assertNotEmpty(Cache::get($secondPurpose . self::RECIPIENT));
+        $this->assertNotEmpty(Cache::get(self::RECIPIENT));
+
+        $this->assertTrue(
+            OTP()->purpose($secondPurpose)->validate(
+                self::RECIPIENT,
+                Cache::get($secondPurpose . self::RECIPIENT)['token']
+            )
         );
-
-        $this->assertNotEmpty(Cache::get($indicator . self::MOBILE));
     }
 
-    /**
-     * @test
-     */
-    public function it_can_set_multiple_indicators(): void
-    {
-        $firstIndicator = 'firstIndicator_';
-        $secondIndicator = 'secondIndicator_';
-
-        OTP()->indicator($firstIndicator)->send(self::MOBILE);
-        OTP()->indicator($secondIndicator)->send(self::MOBILE);
-        OTP()->send(self::MOBILE);
-
-        $this->assertNotEmpty(Cache::get($firstIndicator . self::MOBILE));
-        $this->assertNotEmpty(Cache::get($secondIndicator . self::MOBILE));
-        $this->assertNotEmpty(Cache::get(self::MOBILE));
-
-        $user = OTP()->onlyConfirmToken()->indicator($secondIndicator)->validate(
-            self::MOBILE,
-            Cache::get($secondIndicator . self::MOBILE)['token']
-        );
-
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
-    }
-
-    /**
-     * @test
-     */
-    public function it_can_validate_token_with_custom_indicator(): void
+    #[Test]
+    public function it_can_validate_token_with_custom_purpose(): void
     {
         Notification::fake();
 
-        $indicator = 'customIndicator_';
+        $purpose = 'customPurpose_';
 
-        OTP()->indicator($indicator)->send(self::MOBILE);
+        OTP()->purpose($purpose)->send(self::RECIPIENT);
 
-        $token = Cache::get($indicator . self::MOBILE)['token'];
+        $token = Cache::get($purpose . self::RECIPIENT)['token'];
 
-        $this->assertNotEmpty(Cache::get($indicator . self::MOBILE));
+        $this->assertNotEmpty(Cache::get($purpose . self::RECIPIENT));
 
-        $user = OTP()->indicator($indicator)->validate(self::MOBILE, $token);
-
-        $this->assertInstanceOf(OTPNotifiable::class, $user);
+        $this->assertTrue(OTP()->purpose($purpose)->validate(self::RECIPIENT, $token));
     }
 
-    /**
-     * @test
-     */
-    public function it_can_not_validate_without_custom_indicator(): void
+    #[Test]
+    public function it_can_not_validate_without_custom_purpose(): void
     {
-        $firstIndicator = 'firstIndicator_';
+        Notification::fake();
 
-        OTP()->indicator($firstIndicator)->send(self::MOBILE);
+        $firstPurpose = 'firstPurpose_';
 
-        $this->assertNotEmpty(Cache::get($firstIndicator.self::MOBILE));
+        OTP()->purpose($firstPurpose)->send(self::RECIPIENT);
 
-        $token = Cache::get($firstIndicator . self::MOBILE)['token'];
+        $this->assertNotEmpty(Cache::get($firstPurpose . self::RECIPIENT));
+
+        $token = Cache::get($firstPurpose . self::RECIPIENT)['token'];
 
         $this->expectException(OTPException::class);
 
-        OTP()->onlyConfirmToken()->validate(self::MOBILE, $token);
+        OTP()->validate(self::RECIPIENT, $token);
     }
 }
