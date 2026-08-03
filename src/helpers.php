@@ -1,30 +1,29 @@
 <?php
 
-use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Fouladgar\OTP\Exceptions\OTPException;
 use Fouladgar\OTP\OTPBroker;
 
-if (! function_exists('OTP')) {
+if (!function_exists('OTP')) {
     /**
      * @throws OTPException|Throwable
      */
-    function OTP(?string $mobile = null, $token = null):OTPBroker|OTPNotifiable
+    function OTP(?string $recipient = null, mixed $options = null): OTPBroker|bool
     {
         /** @var OTPBroker $OTP */
         $OTP = app(OTPBroker::class);
 
-        if (is_null($mobile)) {
+        if (is_null($recipient)) {
             return $OTP;
         }
 
-        if (is_null($token)) {
-            return $OTP->send($mobile);
+        if (is_null($options)) {
+            return $OTP->send($recipient);
         }
 
-        if (is_array($token)) {
-            return $OTP->channel($token)->send($mobile);
+        if (is_array($options)) {
+            return $OTP->channel($options)->send($recipient);
         }
 
-        return $OTP->validate($mobile, $token);
+        return $OTP->validate($recipient, $options);
     }
 }

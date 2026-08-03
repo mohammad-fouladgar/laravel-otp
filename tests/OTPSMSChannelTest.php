@@ -7,15 +7,16 @@ use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
 use Fouladgar\OTP\Notifications\Messages\MessagePayload;
 use Fouladgar\OTP\Notifications\Messages\OTPMessage;
 use Fouladgar\OTP\Notifications\OTPNotification;
-use Fouladgar\OTP\Tests\Models\OTPNotifiableUser;
+use Illuminate\Notifications\AnonymousNotifiable;
 use Mockery as m;
+use PHPUnit\Framework\Attributes\Test;
 
 class OTPSMSChannelTest extends TestCase
 {
-    /** @test */
+    #[Test]
     public function it_can_send_token_successfully(): void
     {
-        $notifiable = m::mock(OTPNotifiableUser::class);
+        $notifiable = m::mock(AnonymousNotifiable::class);
         $notification = m::mock(OTPNotification::class);
         $messagePayload = m::mock(MessagePayload::class);
         $OTPMessage = m::mock(OTPMessage::class);
@@ -32,16 +33,16 @@ class OTPSMSChannelTest extends TestCase
         $this->assertTrue($OTPSMSChannel->send($notifiable, $notification));
     }
 
-    /** @test */
+    #[Test]
     public function it_does_not_work_when_there_is_no_otp_route_notification(): void
     {
-        $notifiable = m::mock(OTPNotifiableUser::class);
+        $notifiable = m::mock(AnonymousNotifiable::class);
         $notification = m::mock(OTPNotification::class);
         $SMSClient = m::mock(SMSClient::class);
 
         $notifiable->shouldReceive('routeNotificationFor')
-                   ->with('otp', $notification)
-                   ->andReturnFalse();
+            ->with('otp', $notification)
+            ->andReturnFalse();
 
         $OTPSMSChannel = new OTPSMSChannel($SMSClient);
 

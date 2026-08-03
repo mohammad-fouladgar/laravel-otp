@@ -16,7 +16,7 @@ class OTPNotification extends Notification
 
     public static ?Closure $toSMSCallback = null;
 
-    public function __construct(private string $token, private array $channels)
+    public function __construct(private string $recipient, private string $token, private array $channels)
     {
     }
 
@@ -38,25 +38,25 @@ class OTPNotification extends Notification
     public function toSMS($notifiable)
     {
         if (static::$toSMSCallback) {
-            return call_user_func(static::$toSMSCallback, $notifiable, $this->token);
+            return call_user_func(static::$toSMSCallback, $this->recipient, $this->token);
         }
 
-        return $this->buildSMSMessage($notifiable);
+        return $this->buildSMSMessage();
     }
 
     public function toMail($notifiable)
     {
         if (static::$toMailCallback) {
-            return call_user_func(static::$toMailCallback, $notifiable, $this->token);
+            return call_user_func(static::$toMailCallback, $this->recipient, $this->token);
         }
 
         return $this->buildMailMessage();
     }
 
-    protected function buildSMSMessage($notifiable): OTPMessage
+    protected function buildSMSMessage(): OTPMessage
     {
         return (new OTPMessage())
-            ->to($notifiable->getMobileForOTPNotification())
+            ->to($this->recipient)
             ->content(Lang::get('OTP::otp.otp_token', ['token' => $this->token]));
     }
 
