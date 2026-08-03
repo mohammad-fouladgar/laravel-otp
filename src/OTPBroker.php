@@ -68,7 +68,7 @@ class OTPBroker
      */
     public function validate(string $recipient, string $token): bool
     {
-        if (!$this->isTokenMatching($recipient, $token)) {
+        if (! $this->isTokenMatching($recipient, $token)) {
             event(new TokenValidationFailed($recipient, $this->purpose));
 
             throw OTPException::whenOtpTokenIsInvalid();

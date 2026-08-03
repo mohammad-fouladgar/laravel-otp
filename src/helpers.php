@@ -3,7 +3,7 @@
 use Fouladgar\OTP\Exceptions\OTPException;
 use Fouladgar\OTP\OTPBroker;
 
-if (!function_exists('OTP')) {
+if (! function_exists('OTP')) {
     /**
      * @throws OTPException|Throwable
      */

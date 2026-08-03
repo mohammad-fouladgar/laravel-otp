@@ -56,7 +56,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor('otp') === self::RECIPIENT
+            fn ($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor('otp') === self::RECIPIENT
         );
     }
 
@@ -69,7 +69,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+            fn (OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
         );
     }
 
@@ -83,7 +83,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == $useChannels
+            fn (OTPNotification $notification, $channels) => $channels == $useChannels
         );
     }
 
@@ -96,7 +96,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor(OTPSMSChannel::class) === self::RECIPIENT
+            fn ($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor(OTPSMSChannel::class) === self::RECIPIENT
                 && $notifiable->routeNotificationFor('mail') === self::RECIPIENT
         );
     }
@@ -110,7 +110,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
+            fn (OTPNotification $notification, $channels) => $channels == ['otp_sms']
         );
     }
 
@@ -123,7 +123,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+            fn (OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
         );
     }
 
