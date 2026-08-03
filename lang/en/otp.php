@@ -16,7 +16,7 @@ return [
 
     'token_has_been_expired_or_invalid' => 'the token has been expired or invalid',
 
-    'user_not_found_by_mobile' => 'user not found by mobile',
+    'otp_has_already_been_sent' => 'OTP has already been sent',
 
-    'otp_has_already_been_sent_for_this_mobile' => 'OTP has already been sent for this mobile',
+    'channel_is_not_configured' => 'No notification channel is configured. Set "otp.channel" in your config file or call ->channel() before sending.',
 ];

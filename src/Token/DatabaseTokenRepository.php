@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Fouladgar\OTP\Token;
 
 use Fouladgar\OTP\Contracts\AbstractTokenRepository;
-use Fouladgar\OTP\Contracts\OTPNotifiable;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Query\Builder;
 
@@ -16,15 +15,16 @@ class DatabaseTokenRepository extends AbstractTokenRepository
         protected int                 $expires,
         protected int                 $tokenLength,
         protected string              $table
-    ) {
+    )
+    {
         parent::__construct($expires, $tokenLength);
     }
 
-    public function deleteExisting(OTPNotifiable $user, string $indicator): bool
+    public function deleteExisting(string $recipient, string $purpose): bool
     {
         return (bool)optional($this->getTable()->where([
-            'mobile' => $user->getMobileForOTPNotification(),
-            'indicator' => $indicator,
+            'recipient' => $recipient,
+            'purpose' => $purpose,
         ]))->delete();
     }
 
@@ -32,28 +32,28 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     {
         $record = $this->getTable()
             ->where($filters)
-            ->latest()
+            ->latest('id')
             ->first();
 
         return $record ? (array)$record : null;
     }
 
-    public function exists(string $mobile, string $indicator): bool
+    public function exists(string $recipient, string $purpose): bool
     {
-        $record = $this->getLatestRecord(['mobile' => $mobile, 'indicator' => $indicator]);
+        $record = $this->getLatestRecord(['recipient' => $recipient, 'purpose' => $purpose]);
 
-        return $record && ! $this->tokenExpired($record['expires_at']);
+        return $record && !$this->tokenExpired($record['expires_at']);
     }
 
-    public function isTokenMatching(OTPNotifiable $user, string $indicator, string $token): bool
+    public function isTokenMatching(string $recipient, string $purpose, string $token): bool
     {
         $record = $this->getLatestRecord([
-            'mobile' => $user->getMobileForOTPNotification(),
+            'recipient' => $recipient,
             'token' => $token,
-            'indicator' => $indicator,
+            'purpose' => $purpose,
         ]);
 
-        return $record && ! $this->tokenExpired($record['expires_at']);
+        return $record && !$this->tokenExpired($record['expires_at']);
     }
 
     protected function getTable(): Builder
@@ -61,14 +61,14 @@ class DatabaseTokenRepository extends AbstractTokenRepository
         return $this->connection->table($this->table);
     }
 
-    protected function save(string $mobile, string $indicator, string $token): bool
+    protected function save(string $recipient, string $purpose, string $token): bool
     {
-        return $this->getTable()->insert($this->getPayload($mobile, $indicator, $token));
+        return $this->getTable()->insert($this->getPayload($recipient, $purpose, $token));
     }
 
-    protected function getPayload(string $mobile, string $indicator, string $token): array
+    protected function getPayload(string $recipient, string $purpose, string $token): array
     {
-        return parent::getPayload($mobile, $indicator, $token) +
-            ['expires_at' => now()->addMinutes($this->expires), 'indicator' => $indicator];
+        return parent::getPayload($recipient, $purpose, $token) +
+            ['expires_at' => now()->addMinutes($this->expires), 'purpose' => $purpose];
     }
 }
