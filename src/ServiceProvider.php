@@ -4,28 +4,23 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP;
 
-use Fouladgar\OTP\Contracts\SMSClient;
 use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
-use Fouladgar\OTP\Exceptions\SMSClientNotFoundException;
-use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
+use Fouladgar\OTP\Notifications\Channels\OTPLogChannel;
 use Fouladgar\OTP\Token\TokenRepositoryManager;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
-use Throwable;
 
 class ServiceProvider extends BaseServiceProvider
 {
     public function boot(): void
     {
-        Notification::resolved(
-            function (ChannelManager $service) {
-                $service->extend(
-                    'otp_sms',
-                    fn ($app) => new OTPSMSChannel($app->make(config('otp.sms_client')))
-                );
-            }
-        );
+        Notification::resolved(function (ChannelManager $service) {
+            $service->extend(
+                'otp_log',
+                fn ($app) => new OTPLogChannel($app->make('log'))
+            );
+        });
 
         $this->loadAssetsFrom();
 
@@ -65,16 +60,5 @@ class ServiceProvider extends BaseServiceProvider
         $this->app->singleton('token.repository', fn ($app) => new TokenRepositoryManager($app));
 
         $this->app->singleton(TokenRepositoryInterface::class, fn ($app) => $app['token.repository']->driver());
-
-        $this->app->singleton(
-            SMSClient::class,
-            static function ($app) {
-                try {
-                    return $app->make(config('otp.sms_client'));
-                } catch (Throwable $e) {
-                    throw new SMSClientNotFoundException();
-                }
-            }
-        );
     }
 }

@@ -21,10 +21,10 @@ class DatabaseTokenRepository extends AbstractTokenRepository
 
     public function deleteExisting(string $recipient, string $purpose): bool
     {
-        return (bool)optional($this->getTable()->where([
+        return (bool) $this->getTable()->where([
             'recipient' => $recipient,
-            'purpose' => $purpose,
-        ]))->delete();
+            'purpose'   => $purpose,
+        ])->delete();
     }
 
     protected function getLatestRecord(array $filters): ?array

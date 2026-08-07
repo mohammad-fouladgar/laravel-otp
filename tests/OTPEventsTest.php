@@ -83,12 +83,12 @@ class OTPEventsTest extends TestCase
     {
         Notification::fake();
 
-        OTP()->send(self::RECIPIENT);
-        $token = Cache::get(self::RECIPIENT)['token'];
+        $otp = OTP();
+        $otp->send(self::RECIPIENT);
 
         Event::fake();
 
-        $this->assertTrue(OTP()->validate(self::RECIPIENT, $token));
+        $this->assertTrue(OTP()->validate(self::RECIPIENT, $otp->getToken()));
 
         Event::assertDispatched(TokenValidated::class, fn ($event) => $event->recipient === self::RECIPIENT);
         Event::assertDispatched(TokenRevoked::class, fn ($event) => $event->recipient === self::RECIPIENT);

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP\Tests;
 
-use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
 use Fouladgar\OTP\ServiceProvider;
 use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as BaseTestCase;
@@ -33,8 +32,7 @@ class TestCase extends BaseTestCase
      */
     protected function getEnvironmentSetUp($app): void
     {
-        $app['config']->set('otp.sms_client', SampleSMSClient::class);
-        $app['config']->set('otp.channel', OTPSMSChannel::class);
-        $app['config']->set('otp.prefix', '');
+        $app['config']->set('otp.channel', 'otp_log');
+        $app['config']->set('otp.default_purpose', '');
     }
 }

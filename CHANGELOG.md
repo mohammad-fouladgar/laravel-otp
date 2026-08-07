@@ -19,20 +19,20 @@
 - Fixed: sending now routes the recipient to *every* configured channel (previously only the bundled `otp_sms`
   channel's own `'otp'` route key was set), so built-in Laravel channels like `mail` actually receive the recipient
   and deliver instead of silently doing nothing.
-- Add `OTPBroker::withoutNotify()` — generates and stores the token without dispatching any notification (and
-  without requiring `otp.channel` to be configured), for setups where a separate service (e.g. a "notification"
-  microservice) is responsible for actual delivery.
+- Add `OTPBroker::withNotify(bool $withNotify = true)` — generates and stores the token without dispatching any
+  notification (and without requiring `otp.channel` to be configured), for setups where a separate service (e.g. a
+  "notification" microservice) is responsible for actual delivery.
 - Add event-driven lifecycle hooks under `Fouladgar\OTP\Events`: `CreatingToken` and `SendingNotification` (both
   cancelable — return `false` from a listener to abort), `TokenCreated`, `TokenCreationFailed`, `NotificationSent`,
   `TokenValidated`, `TokenValidationFailed`, and `TokenRevoked`. See the README's "Events" section.
 - **Breaking:** renamed `indicator` to `purpose` throughout the package (`OTPBroker::indicator()` → `purpose()`, the
   events' `indicator` payload field → `purpose`) — "purpose" is a clearer name for what this value actually does:
   scoping a token to what it's for (e.g. `login_` vs. `password_reset_`) so multiple independent OTPs can exist for
-  the same recipient at once. The `otp.prefix` config option is unrelated to this rename and keeps its name — it
-  still doubles as the default `purpose` value, same as before. A new migration renames the existing
-  `otp_tokens.indicator` database column to `purpose` (the original
-  `2025_01_28_000000_add_indicator_to_otp_tokens_table` migration was left untouched since it has already run in
-  previous versions — just run `php artisan migrate` to pick up the new one).
+  the same recipient at once. A new migration renames the existing `otp_tokens.indicator` database column to
+  `purpose` (the original `2025_01_28_000000_add_indicator_to_otp_tokens_table` migration was left untouched since
+  it has already run in previous versions — just run `php artisan migrate` to pick up the new one).
+- **Breaking:** renamed config key `otp.prefix` to `otp.default_purpose` — the old name was ambiguous since the
+  value is not a cache prefix but the default purpose scope used when `->purpose()` is not called explicitly.
 - Add `OTPBroker::fake()` — stores a valid token for a recipient without sending anything, for use in your own
   application's tests (e.g. exercising an OTP login endpoint without an actual SMS/email). Optionally accepts a
   specific token value and/or purpose (`fake($recipient, $token = null, $purpose = null)`) instead of requiring

@@ -105,9 +105,9 @@ class OTPBroker
         return $this->token;
     }
 
-    public function channel($channel = ['']): static
+    public function channel(array|string $channel): static
     {
-        $this->channel = is_array($channel) ? $channel : func_get_args();
+        $this->channel = (array) $channel;
 
         return $this;
     }
@@ -164,9 +164,9 @@ class OTPBroker
         return $this->tokenRepository->exists($recipient, $this->purpose);
     }
 
-    private function getDefaultPurpose()
+    private function getDefaultPurpose(): string
     {
-        return config('otp.prefix');
+        return config('otp.default_purpose', 'otp_');
     }
 
     private function shouldNotify(): bool

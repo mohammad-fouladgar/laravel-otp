@@ -7,8 +7,7 @@
     "otp-login",
     "laravel-otp",
     "one-time-password",
-    "laravel",
-    "lumen"
+    "laravel"
   ],
   "support": {
     "issues": "https://github.com/mohammad-fouladgar/laravel-otp/issues",
@@ -62,6 +61,5 @@
   "config": {
     "discard-changes": true
   },
-  "minimum-stability": "dev",
-  "prefer-stable": true
+  "minimum-stability": "stable"
 }

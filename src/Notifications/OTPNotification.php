@@ -35,6 +35,11 @@ class OTPNotification extends Notification
         return $this->channels;
     }
 
+    public function toLog($notifiable): array
+    {
+        return ['recipient' => $this->recipient, 'token' => $this->token];
+    }
+
     public function toSMS($notifiable)
     {
         if (static::$toSMSCallback) {

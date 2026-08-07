@@ -87,7 +87,7 @@ class UpgradeOTPTokensTable extends Migration
         if (!Schema::hasColumn($this->tokenTable, 'purpose')) {
             Schema::table($this->tokenTable, function (Blueprint $table): void {
                 $table->string('purpose')
-                    ->default(config('otp.prefix', 'otp'));
+                    ->default(config('otp.default_purpose', 'otp_'));
             });
         }
     }

@@ -4,7 +4,6 @@ namespace Fouladgar\OTP\Tests;
 
 use Fouladgar\OTP\Exceptions\OTPException;
 use Fouladgar\OTP\Facades\OTP;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -18,10 +17,7 @@ class OTPFacadeTest extends TestCase
         Notification::fake();
 
         $this->assertTrue(OTP::send(self::RECIPIENT));
-
-        $token = Cache::get(self::RECIPIENT)['token'];
-
-        $this->assertTrue(OTP::validate(self::RECIPIENT, $token));
+        $this->assertTrue(OTP::validate(self::RECIPIENT, OTP::getToken()));
     }
 
     #[Test]
@@ -44,6 +40,6 @@ class OTPFacadeTest extends TestCase
         $this->assertTrue(OTP::withNotify(false)->send(self::RECIPIENT));
 
         Notification::assertNothingSent();
-        $this->assertNotEmpty(Cache::get(config('otp.prefix') . self::RECIPIENT));
+        $this->assertNotNull(OTP::getToken());
     }
 }
