@@ -8,12 +8,11 @@
 > **Upgrading from v5?** See the [Upgrade Guide](UPGRADE.md) for a step-by-step migration walkthrough.
 
 ## Introduction
-
-Most web applications need an OTP (one-time password) or secure code to validate a user. This package only takes
-care of generating, sending and validating OTP tokens for a **recipient** — a mobile number, an email address, or
-any other identifier your notification channel knows how to deliver to. It does not manage or persist any "user"
-model on your behalf. It's up to your application to decide what to do once a token is validated (e.g. login,
-register, verify a phone number, etc.).
+Laravel OTP provides a secure, simple, and flexible way to generate, send, and validate One-Time Passwords. It supports
+multiple independent OTP flows through purpose-based tokens, ensuring that another cannot consume a token generated
+for one flow. OTP delivery is fully extensible and can use any notification channel, including SMS, email, or custom 
+channels. The package is event-driven, providing lifecycle events that make it easy to integrate OTP flows with your 
+application's business logic, monitoring, auditing, or external notification services.
 
 ## Table of Contents
 
