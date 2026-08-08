@@ -1,3 +1,6 @@
+## 6.0.1 - 2026-08-08
+ - fix migration
+
 ## 6.0.0 - 2026-08-07
  - Checkout the [Upgrade Guide](UPGRADE.md)
 
