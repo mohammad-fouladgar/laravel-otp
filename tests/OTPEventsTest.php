@@ -18,7 +18,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class OTPEventsTest extends TestCase
 {
-    protected const RECIPIENT = '09389599530';
+    protected const RECIPIENT = '5555555555';
 
     #[Test]
     public function it_dispatches_events_on_successful_send(): void

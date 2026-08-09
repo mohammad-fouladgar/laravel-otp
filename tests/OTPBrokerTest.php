@@ -10,7 +10,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class OTPBrokerTest extends TestCase
 {
-    protected const RECIPIENT = '09389599530';
+    protected const RECIPIENT = '5555555555';
 
     #[Test]
     public function it_can_not_send_when_no_channel_is_configured(): void

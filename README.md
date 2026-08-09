@@ -24,6 +24,7 @@ application's business logic, monitoring, auditing, or external notification ser
     - [Token Storage](#token-storage)
     - [Token Lifetime](#token-lifetime)
     - [Token Length](#token-length)
+    - [Token Generator](#token-generator)
 - [Purpose](#purpose)
 - [Disabling Notifications](#disabling-notifications)
 - [Customization](#customization)
@@ -224,8 +225,8 @@ return [
 
 ### Token Length
 
-`token_length` controls how many digits are generated for each token. The default value is `5`, but you can increase
-or decrease it based on your application's verification requirements.
+`token_length` controls how many characters are generated for each token. The default value is `5`, but you can
+increase or decrease it based on your application's verification requirements.
 
 ```php
 // config/otp.php
@@ -237,6 +238,44 @@ return [
 
     // ...
 ];
+```
+
+### Token Generator
+
+`token_generator` controls how a token's value is generated. By default, `NumericAbstractTokenGenerator` produces
+digits-only tokens, which works well for SMS delivery on a numeric keypad.
+
+```php
+// config/otp.php
+
+return [
+    // ...
+
+    'token_generator' => Fouladgar\OTP\Token\Generators\NumericAbstractTokenGenerator::class,
+
+    // ...
+];
+```
+
+For channels where higher entropy per character is worth it — email, for example — swap in the bundled
+`AlphanumericAbstractTokenGenerator`, which generates uppercase letters and digits:
+
+```php
+'token_generator' => Fouladgar\OTP\Token\Generators\AlphanumericAbstractTokenGenerator::class,
+```
+
+You can also provide your own class extending `Fouladgar\OTP\Contracts\AbstractTokenGenerator`:
+
+```php
+use Fouladgar\OTP\Contracts\AbstractTokenGenerator;
+
+class MyTokenGenerator extends AbstractTokenGenerator
+{
+    public function generate(int $length): string
+    {
+        // (random_int/random_bytes) — never rand() or mt_rand().
+    }
+}
 ```
 
 ## Purpose

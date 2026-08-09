@@ -27,6 +27,18 @@ return [
 
     /*
      |--------------------------------------------------------------------------
+     | Token Generator
+     |--------------------------------------------------------------------------
+     |
+     | The class responsible for generating a token's value. The default generator produces
+     | numeric-only tokens.
+     |
+     */
+
+    'token_generator' => Fouladgar\OTP\Token\Generators\NumericAbstractTokenGenerator::class,
+
+    /*
+     |--------------------------------------------------------------------------
      | Verification Token Lifetime
      |--------------------------------------------------------------------------
      |

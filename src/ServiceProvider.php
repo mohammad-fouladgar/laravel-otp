@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP;
 
+use Fouladgar\OTP\Contracts\AbstractTokenGenerator;
 use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
 use Fouladgar\OTP\Notifications\Channels\OTPLogChannel;
+use Fouladgar\OTP\Token\Generators\NumericAbstractTokenGenerator;
 use Fouladgar\OTP\Token\TokenRepositoryManager;
 use Illuminate\Notifications\ChannelManager;
 use Illuminate\Support\Facades\Notification;
@@ -57,6 +59,11 @@ class ServiceProvider extends BaseServiceProvider
 
     protected function registerBindings(): void
     {
+        $this->app->singleton(
+            AbstractTokenGenerator::class,
+            fn ($app) => $app->make($app['config']->get('otp.token_generator', NumericAbstractTokenGenerator::class))
+        );
+
         $this->app->singleton('token.repository', fn ($app) => new TokenRepositoryManager($app));
 
         $this->app->singleton(TokenRepositoryInterface::class, fn ($app) => $app['token.repository']->driver());
