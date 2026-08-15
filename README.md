@@ -31,7 +31,7 @@ application's business logic, monitoring, auditing, or external notification ser
 - [Events](#events)
 - [Translations](#translations)
 - [Testing](#testing)
-    - [Faking a Token in Your Application's Tests](#faking-a-token-in-your-applications-tests)
+    - [Faking a Token](#faking-a-token-in-your-applications-tests)
     - [Running Tests](#running-tests)
 
 ## Basic Usage
