@@ -19,7 +19,7 @@ readonly class OTPLogChannel
 
         $this->logger->debug('OTP token generated', [
             'recipient' => $recipient,
-            'token'     => $token,
+            'token' => $token,
         ]);
     }
 }
