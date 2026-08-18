@@ -5,31 +5,91 @@
 ![Code Style Status](https://img.shields.io/github/actions/workflow/status/mohammad-fouladgar/laravel-otp/php-cs-fixer.yml?label=code%20style)
 ![Total Downloads](https://img.shields.io/packagist/dt/fouladgar/laravel-otp)
 
-## Introduction
+> **Upgrading from v5?** See the [Upgrade Guide](UPGRADE.md) for a step-by-step migration walkthrough.
 
-Most web applications need an OTP (one-time password) or secure code to validate a user. This package only takes
-care of generating, sending and validating OTP tokens for a **recipient** — a mobile number, an email address, or
-any other identifier your notification channel knows how to deliver to. It does not manage or persist any "user"
-model on your behalf. It's up to your application to decide what to do once a token is validated (e.g. login,
-register, verify a phone number, etc.).
+## Introduction
+Laravel OTP provides a secure, simple, and flexible way to generate, send, and validate One-Time Passwords. It supports
+multiple independent OTP flows through purpose-based tokens, ensuring that another cannot consume a token generated
+for one flow. OTP delivery is fully extensible and can use any notification channel, including SMS, email, or custom 
+channels. The package is event-driven, providing lifecycle events that make it easy to integrate OTP flows with your 
+application's business logic, monitoring, auditing, or external notification services.
 
 ## Table of Contents
 
+- [Basic Usage](#basic-usage)
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Configuration](#configuration)
-    - [Notification Channel (REQUIRED)](#notification-channel-required)
-    - [SMS Client](#sms-client)
+    - [Notification Channel](#notification-channel)
     - [Token Storage](#token-storage)
-    - [Token Life Time](#token-life-time)
-- [Basic Usage](#basic-usage)
+    - [Token Lifetime](#token-lifetime)
+    - [Token Length](#token-length)
+    - [Token Generator](#token-generator)
 - [Purpose](#purpose)
-- [Without Notify](#without-notify)
+- [Disabling Notifications](#disabling-notifications)
 - [Customization](#customization)
 - [Events](#events)
-- [Translates](#translates)
+- [Translations](#translations)
 - [Testing](#testing)
-    - [Faking a Token in Your Application's Tests](#faking-a-token-in-your-applications-tests)
+    - [Faking a Token](#faking-a-token-in-your-applications-tests)
+    - [Running Tests](#running-tests)
+
+## Basic Usage
+
+Once the package is configured, sending and validating tokens is straightforward. The same API works whether the
+recipient is a mobile number, an email address, or another identifier supported by your notification channel.
+
+**Send a token:**
+
+```php
+use Fouladgar\OTP\Facades\OTP;
+
+OTP::send('+98900000000');
+```
+
+**Send to an email address** (point `otp.channel` to `mail`):
+
+```php
+OTP::channel('mail')->send('user@example.com');
+```
+
+**Send through multiple channels for this call:**
+
+```php
+OTP::channel(['mail', \App\Channels\CustomChannel::class])
+    ->send('+98900000000');
+```
+
+**Validate a token** (recipient must match the value used for `send()`):
+
+```php
+OTP::validate('+98900000000', 'token_123'); // returns bool
+```
+
+**Read the generated token after `send()`:**
+
+```php
+use Fouladgar\OTP\Facades\OTP;
+
+OTP::send('+98900000000');
+$token = OTP::getToken();
+```
+
+**Revoke a pending token:**
+
+```php
+OTP::revoke('+98900000000');
+```
+
+> `send()` and `validate()` return `bool`. On failure, the package throws
+> `Fouladgar\OTP\Exceptions\OTPException` instead of returning `false`.
+
+Every channel receives the same recipient value. Only combine channels that understand the same recipient format.
+For example, do not mix `mail` with SMS-only channels unless the recipient is an email address.
+
+You can also inject `Fouladgar\OTP\OTPBroker` directly wherever you need it, such as in a controller or service
+class. The `OTP()` helper is a shortcut for `app(OTPBroker::class)` and returns the broker directly — useful when
+you need to chain calls without a static import.
 
 ## Requirements
 
@@ -38,43 +98,31 @@ register, verify a phone number, etc.).
 
 ## Installation
 
-You can install the package via composer:
+Install the package with Composer:
 
 ```shell
 composer require fouladgar/laravel-otp
 ```
 
-Thanks to Laravel's package auto-discovery, the service provider is registered automatically — no manual step needed.
+Thanks to Laravel's package auto-discovery, the service provider is registered automatically. No manual provider
+registration is required.
 
 ## Configuration
 
-As next step, let's publish the config file `config/otp.php` by executing:
+Next, publish the configuration file. This creates `config/otp.php`, where you can choose the notification channel,
+token storage driver, lifetime, and token length.
 
 ```
 php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="config"
 ```
 
-### Notification Channel (REQUIRED)
+### Notification Channel
 
-This package doesn't ship with a default delivery mechanism — it just dispatches a `Fouladgar\OTP\Notifications\OTPNotification`.
-You must tell it which notification channel(s) to use via `otp.channel`. You have two options:
+The package generates the token, builds a `Fouladgar\OTP\Notifications\OTPNotification`, and dispatches it through
+the channel configured in `otp.channel`. The default channel is `otp_log`, which writes tokens to Laravel's log —
+useful during development. **Replace it with your real channel before going to production.**
 
-**Option A — use the bundled SMS channel.** This requires you to also configure `sms_client` (see [SMS Client](#sms-client)):
-
-```php
-//config/otp.php
-<?php
-
-return [
-    // ...
-
-    'channel' => \Fouladgar\OTP\Notifications\Channels\OTPSMSChannel::class,
-];
-```
-
-**Option B — use your own (or a third-party) notification channel.** Nothing SMS-specific is required from this
-package at all; write a plain channel class the way [Laravel's notification system](https://laravel.com/docs/notifications#creating-the-channel)
-expects, and point `otp.channel` to it:
+Write a standard Laravel notification channel and point `otp.channel` to it:
 
 ```php
 <?php
@@ -82,270 +130,161 @@ expects, and point `otp.channel` to it:
 namespace App\Channels;
 
 use Fouladgar\OTP\Notifications\OTPNotification;
+use Fouladgar\OTP\Notifications\Messages\OTPMessage;
+use Fouladgar\OTP\Notifications\Messages\MessagePayload;
 
-class CustomChannel
+class MySMSChannel
 {
     public function send($notifiable, OTPNotification $notification): void
     {
         $message = $notification->toSMS($notifiable);
 
-        // ...send $message->getPayload()->to() / ->content() via your own SMS provider.
+        // $message->getPayload()->to()      → recipient
+        // $message->getPayload()->content() → token message
     }
 }
 ```
-
-```php
-//config/otp.php
-<?php
-
-return [
-    // ...
-
-    'channel' => \App\Channels\CustomChannel::class,
-];
-```
-
-> If `otp.channel` is left unset, `send()` throws a `Fouladgar\OTP\Exceptions\OTPException` instead of silently doing
-> nothing. This requirement doesn't apply if you use [`withoutNotify()`](#without-notify).
-
-> **Note:** The recipient you pass to `send()` is registered as the routing target for *every* channel you configured
-> (via Laravel's on-demand notifications), so built-in channels like `mail` work out of the box too — e.g.
-> `OTP::channel('mail')->send('info@example.com')` will actually deliver an email.
-
-### SMS Client
-
-> This section only applies if you use the bundled `Fouladgar\OTP\Notifications\Channels\OTPSMSChannel` (see
-> [Notification Channel](#notification-channel-required) above). If you use your own notification channel, skip this.
-
-You can use any SMS service for sending the OTP message — it's entirely your choice.
-
-For sending notifications via the bundled channel, first you need to implement the `Fouladgar\OTP\Contracts\SMSClient`
-contract. This contract requires you to implement a `sendMessage` method.
-
-This method receives a `Fouladgar\OTP\Notifications\Messages\MessagePayload` object which contains the **recipient**
-and **token** message, and should return your SMS service's API result:
-
-```php
-<?php
-
-namespace App;
-
-use Fouladgar\OTP\Contracts\SMSClient;
-use Fouladgar\OTP\Notifications\Messages\MessagePayload;
-
-class SampleSMSClient implements SMSClient
-{
-    public function __construct(protected SampleSMSService $SMSService)
-    {
-    }
-
-    public function sendMessage(MessagePayload $payload): mixed
-    {
-        return $this->SMSService->send($payload->to(), $payload->content());
-    }
-
-    // ...
-}
-```
-
-> In the example above, `SMSService` can be replaced with your chosen SMS service along with its respective method.
-
-Next, set the client wrapper `SampleSMSClient` class in the config file:
 
 ```php
 // config/otp.php
 
-<?php
-
 return [
+    // ...
 
-  'sms_client' => \App\SampleSMSClient::class,
-
-  //...
+    'channel' => \App\Channels\MySMSChannel::class,
 ];
 ```
+
+> The recipient passed to `send()` is used as the routing target for every configured channel through Laravel's
+> on-demand notifications. Built-in channels such as `mail` work too:
+> `OTP::channel('mail')->send('info@example.com')`.
 
 ### Token Storage
 
-The package lets you store the generated one-time password on either a `cache` or `database` driver — the default
-is `cache`.
+The package stores generated tokens in either `cache` or `database`. The default driver is `cache`, which is usually
+enough for simple applications.
 
-You can change the preferred driver through the config file that we published earlier:
+You can change the driver in `config/otp.php`:
 
 ```php
 // config/otp.php
 
-<?php
-
 return [
-    /**
-    |Supported drivers: "cache", "database"
+    /*
+    |--------------------------------------------------------------------------
+    | Supported drivers: "cache", "database"
+    |--------------------------------------------------------------------------
     */
     'token_storage' => 'cache',
 ];
 ```
 
-##### Cache
+#### Cache
 
-Note that `Laravel OTP` uses your application's already-configured `cache` driver to store the token. If you haven't
-configured one yet (or don't plan to), use `database` instead.
+The `cache` driver uses your application's configured Laravel cache store. If your app does not have a suitable
+cache store, use the `database` driver.
 
-##### Database
+#### Database
 
-This means, after migrating, a table will be created for your application to store verification tokens.
+The `database` driver stores tokens in a table created by the package migration.
 
-> If you're using another name for the `otp_tokens` table, you can customize it in the config file:
+Customize the table name if needed:
 
 ```php
 // config/otp.php
 
-<?php
-
 return [
-
     'token_table' => 'otp_token',
 
-    //...
+    // ...
 ];
-
 ```
 
-The package's migrations are loaded automatically, so all that's left is:
+Then run the migrations:
 
 ```
 php artisan migrate
 ```
 
-### Token Life Time
+### Token Lifetime
 
-You can specify an OTP `token_lifetime`, ensuring that once an OTP token is sent, no new token will be generated or
-sent for the same recipient until the current one has expired.
+`token_lifetime` controls how long a pending token remains valid. While the current token has not expired, the
+package will not generate or send another token for the same recipient and purpose.
+
+This prevents users from requesting several active codes for the same flow at the same time.
 
 ```php
 // config/otp.php
 
-<?php
-
 return [
-    //...
+    'token_lifetime' => env('OTP_TOKEN_LIFE_TIME', 2),
 
-    'token_lifetime' => env('OTP_TOKEN_LIFE_TIME', 5),
-
-    //...
+    // ...
 ];
 ```
 
-You can also change the length of the generated token via `token_length` (default `5`):
+### Token Length
+
+`token_length` controls how many characters are generated for each token. The default value is `5`, but you can
+increase or decrease it based on your application's verification requirements.
 
 ```php
 // config/otp.php
 
-<?php
-
 return [
-    //...
+    // ...
 
     'token_length' => env('OTP_TOKEN_LENGTH', 5),
 
-    //...
+    // ...
 ];
 ```
 
-## Basic Usage
+### Token Generator
 
-Once configured, sending and validating tokens looks like this. The recipient you pass to `send()`/`validate()` can
-be a mobile number, an email address, or any other identifier — whatever your configured notification channel(s)
-know how to deliver to.
+`token_generator` controls how a token's value is generated. By default, `NumericAbstractTokenGenerator` produces
+digits-only tokens, which works well for SMS delivery on a numeric keypad.
 
 ```php
-<?php
+// config/otp.php
 
-use Fouladgar\OTP\Facades\OTP;
+return [
+    // ...
 
-/*
-|--------------------------------------------------------------------------
-| Send OTP to a mobile number (e.g. via the bundled "otp_sms" channel).
-|--------------------------------------------------------------------------
-*/
+    'token_generator' => Fouladgar\OTP\Token\Generators\NumericAbstractTokenGenerator::class,
 
-OTP::send('+98900000000');
-// Or
-OTP('+98900000000');
-
-/*
-|--------------------------------------------------------------------------
-| Send OTP to an email address.
-|--------------------------------------------------------------------------
-| Just point "otp.channel" to "mail" (globally in config/otp.php, or per-call
-| as shown below) and pass an email address as the recipient instead of a
-| mobile number.
-*/
-
-OTP::channel('mail')->send('user@example.com');
-// Or
-OTP('user@example.com', ['mail']);
-
-/*
-|--------------------------------------------------------------------------
-| Send OTP via multiple channels at once, for this call only.
-|--------------------------------------------------------------------------
-| Every channel you list receives the SAME recipient value, so only combine
-| channels that can all handle that value's shape — e.g. "otp_sms" and your
-| own custom SMS-shaped channel both accept a mobile number here. Don't mix
-| in "mail" unless the recipient is actually an email address.
-*/
-
-OTP::channel(['otp_sms', \App\Channels\CustomChannel::class])
-   ->send('+98900000000');
-// Or
-OTP('+98900000000', ['otp_sms', \App\Channels\CustomChannel::class]);
-
-/*
-|--------------------------------------------------------------------------
-|  Validate OTP.
-|--------------------------------------------------------------------------
-| Works the same regardless of whether the recipient is a mobile number or
-| an email address — it just has to match what send() was called with.
-*/
-
-OTP::validate('+98900000000', 'token_123');
-OTP::validate('user@example.com', 'token_123');
-// Or
-OTP('+98900000000', 'token_123');
-
-/*
-|--------------------------------------------------------------------------
-| Get the last generated token right after send() (e.g. for logging/testing).
-|--------------------------------------------------------------------------
-*/
-
-$otp = OTP();
-$otp->send('+98900000000');
-$otp->getToken();
-
-/*
-|--------------------------------------------------------------------------
-| Revoke a pending OTP without validating it.
-|--------------------------------------------------------------------------
-*/
-OTP::revoke('+98900000000');
+    // ...
+];
 ```
 
-> Both `send()` and `validate()` return a `bool`. On failure (invalid/expired token, or an OTP already pending for
-> that recipient), a `Fouladgar\OTP\Exceptions\OTPException` is thrown instead of returning `false`.
+For channels where higher entropy per character is worth it — email, for example — swap in the bundled
+`AlphanumericAbstractTokenGenerator`, which generates uppercase letters and digits:
 
-You can also inject `Fouladgar\OTP\OTPBroker` directly wherever you need it (e.g. in a controller or service class) —
-the facade and the `OTP()` helper are just convenient shortcuts around the same class.
+```php
+'token_generator' => Fouladgar\OTP\Token\Generators\AlphanumericAbstractTokenGenerator::class,
+```
+
+You can also provide your own class extending `Fouladgar\OTP\Contracts\AbstractTokenGenerator`:
+
+```php
+use Fouladgar\OTP\Contracts\AbstractTokenGenerator;
+
+class MyTokenGenerator extends AbstractTokenGenerator
+{
+    public function generate(int $length): string
+    {
+        // (random_int/random_bytes) — never rand() or mt_rand().
+    }
+}
+```
 
 ## Purpose
 
-Every token is generated for a `recipient` **and** a `purpose` — a short scope tag so multiple independent OTPs can
-co-exist for the same recipient at the same time.
+Every token is generated for a `recipient` and a `purpose`. The purpose is a short scope tag that lets multiple OTP
+flows exist for the same recipient without colliding.
 
-Without it, if a user requested a "login" OTP and then, before validating it, also requested a "password reset" OTP
-for the same number, the second `send()` would either collide with the first or you'd need your own bookkeeping to
-tell them apart. `purpose()` solves this by scoping the token record — think of it as answering "what is this
-specific one-time code actually for?"
+For example, a user may request a login token and then request a password reset token before validating the first
+one. With separate purposes, both tokens can exist independently for the same phone number.
 
 ```php
 use Fouladgar\OTP\Facades\OTP;
@@ -353,34 +292,37 @@ use Fouladgar\OTP\Facades\OTP;
 OTP::purpose('login_')->send('+98900000000');
 OTP::purpose('password_reset_')->send('+98900000000');
 
-// Each purpose is tracked independently — validating the "password_reset_"
-// token below has no effect on the still-pending "login_" one.
+// This does not affect the still-pending "login_" token.
 OTP::purpose('password_reset_')->validate('+98900000000', 'token_123');
 ```
 
-- **`validate()` and `revoke()` must be called with the same purpose `send()` used** — otherwise they simply won't
-  find a matching record (exactly as if the token never existed).
-- If you never call `->purpose()`, the default value from the `otp.prefix` config option (`'otp_'` out of the box)
-  is used for every call — which is all you need for apps that only ever send one kind of OTP per recipient.
-- `purpose` (together with `recipient`) is also what `OTPException::whenOtpAlreadySent()` keys off: two `send()`
-  calls for the same recipient with *different* purposes never conflict; the same recipient **and** purpose does.
+- `validate()` and `revoke()` must use the same purpose that was used by `send()`.
+- If you never call `purpose()`, the package uses the `otp.default_purpose` config value. The default is `otp_`.
+- A pending token only blocks another `send()` when both the recipient and purpose are the same.
 
-## Without Notify
+## Disabling Notifications
 
-If a separate service in your system is responsible for actually delivering the SMS/email (e.g. a dedicated
-"notification" microservice), you probably don't want this package attempting delivery itself. Call `withoutNotify()`
-before `send()` to only generate and store the token — no channel needs to be configured, and no notification is
-dispatched:
+Use `withNotify(false)` when this package should generate the token but another part of your system should deliver
+it. This is useful when SMS or email delivery is handled by a separate notification service.
+
+In this mode, `send()` only generates and stores the token. No notification channel is required, and no notification
+is dispatched.
 
 ```php
 use Fouladgar\OTP\Facades\OTP;
 
-OTP::withoutNotify()->send('09389599530');
+OTP::withNotify(false)->send('98900000000');
 ```
 
-You then pick the token up yourself — either straight from `getToken()` right after `send()`, or (more usefully in a
-decoupled/microservice setup) via the `TokenCreated` event, so a listener can hand it off to your own notification
-service (see [Events](#events)):
+To disable notifications globally for all calls, set `with_notify` to `false` in `config/otp.php`:
+
+```php
+'with_notify' => false,
+```
+
+After calling `send()`, you can read the token directly with `getToken()`. In a decoupled setup, listening for
+`TokenCreated` is usually cleaner because a listener can publish the token to a queue or call your notification
+service.
 
 ```php
 <?php
@@ -395,19 +337,14 @@ Event::listen(TokenCreated::class, function (TokenCreated $event) {
 });
 ```
 
-`validate()` and `revoke()` behave exactly the same regardless of `withoutNotify()` — it only ever affects `send()`.
+`withNotify(false)` only affects `send()`. `validate()` and `revoke()` behave the same either way.
 
 ## Customization
 
-### Notification SMS and Email Customization
+### Notification Customization
 
-OTP notification prepares a default sms and email format that satisfies most applications. However, you can
-customize how the mail/sms message is constructed.
-
-To get started, pass a closure to the `toSMSUsing`/`toMailUsing` method provided by
-the `Fouladgar\OTP\Notifications\OTPNotification` notification. The closure receives the `recipient` the token was
-generated for as well as the `token` itself. Typically, you should call those methods from the boot method of your
-application's `App\Providers\AppServiceProvider` class:
+You can customize the SMS and mail messages by registering closures in your
+`App\Providers\AppServiceProvider::boot()`. Each closure receives the recipient and the generated token.
 
 ```php
 <?php
@@ -418,50 +355,88 @@ use Illuminate\Notifications\Messages\MailMessage;
 
 public function boot()
 {
-    // ...
+    OTPNotification::toSMSUsing(fn ($recipient, $token) => (new OTPMessage())
+        ->to($recipient)
+        ->content('Your OTP Token is: '.$token)
+        ->template('OTP_TEMPLATE'));
 
-    // SMS Customization
-    OTPNotification::toSMSUsing(fn($recipient, $token) =>(new OTPMessage())
-                    ->to($recipient)
-                    ->content('Your OTP Token is: '.$token)
-                    ->template('OTP_TEMPLATE'));
-
-    //Email Customization
-    OTPNotification::toMailUsing(fn ($recipient, $token) =>(new MailMessage)
-            ->subject('OTP Request')
-            ->line('Your OTP Token is: '.$token));
+    OTPNotification::toMailUsing(fn ($recipient, $token) => (new MailMessage)
+        ->subject('OTP Request')
+        ->line('Your OTP Token is: '.$token));
 }
 ```
 
 ## Events
 
-`OTPBroker` dispatches events at each step of the token lifecycle. Listen for them the way you normally would in
-Laravel (`Event::listen()`, a listener class, `App\Providers\EventServiceProvider`, etc.).
+`OTPBroker` dispatches events throughout the token lifecycle. Listen for them with Laravel's normal event tools:
+`Event::listen()`, listener classes, or `App\Providers\EventServiceProvider`.
 
-This is especially useful in a microservice setup: instead of (or in addition to) relying on this package's built-in
-delivery, listen for `TokenCreated` and hand the token off to your own notification service (publish to a queue,
-call an HTTP API, etc.) — combine with [`withoutNotify()`](#without-notify) if you don't want this package to attempt
-delivery at all.
+Events are useful for audit logs, security monitoring, and decoupled notification delivery. For example, you can
+listen for `TokenCreated` and publish the token to a queue or notification service.
 
-| Event | Fired when | Payload | Cancelable |
-|---|---|---|---|
-| `Fouladgar\OTP\Events\CreatingToken` | Right before a token is generated | `recipient`, `purpose` | Yes — return `false` from a listener to abort; `send()` returns `false` and nothing is created |
-| `Fouladgar\OTP\Events\TokenCreated` | Right after the token is generated and stored | `recipient`, `token`, `purpose` | No |
-| `Fouladgar\OTP\Events\TokenCreationFailed` | `send()` aborted because a token is already pending for this recipient/purpose | `recipient`, `purpose` | No |
-| `Fouladgar\OTP\Events\SendingNotification` | Right before the built-in notification is dispatched (skipped entirely when using `withoutNotify()`) | `recipient`, `token`, `channels` | Yes — return `false` to skip built-in delivery for this call only |
-| `Fouladgar\OTP\Events\NotificationSent` | Right after the built-in notification has been handed off | `recipient`, `token`, `channels` | No |
-| `Fouladgar\OTP\Events\TokenValidated` | `validate()` succeeded (before the token is revoked) | `recipient`, `purpose` | No |
-| `Fouladgar\OTP\Events\TokenValidationFailed` | `validate()` was called with a missing, invalid, or expired token | `recipient`, `purpose` | No |
-| `Fouladgar\OTP\Events\TokenRevoked` | A pending token was actually deleted — via an explicit `revoke()` call, or automatically after a successful `validate()` | `recipient`, `purpose` | No |
+### Token Events
 
-> **Note:** `TokenCreationFailed` and `TokenValidationFailed` exist mainly for security monitoring (e.g. detecting
-> repeated OTP requests or brute-force guesses). We deliberately did **not** add an event for the "no channel
-> configured" error — that's a one-time misconfiguration you catch immediately via the thrown exception, not a
-> runtime signal worth monitoring.
+#### `Fouladgar\OTP\Events\CreatingToken`
 
-## Translates
+- **When:** before a token is generated
+- **Payload:** `recipient`, `purpose`
+- **Cancelable:** yes. If any listener returns `false`, token creation stops. No token is stored, no notification is
+  sent, and `send()` returns `false`.
 
-To publish the translation file you may use this command:
+#### `Fouladgar\OTP\Events\TokenCreated`
+
+- **When:** after a token is generated and stored
+- **Payload:** `recipient`, `token`, `purpose`
+- **Cancelable:** no
+
+#### `Fouladgar\OTP\Events\TokenCreationFailed`
+
+- **When:** `send()` is blocked because a pending token already exists for the same recipient and purpose
+- **Payload:** `recipient`, `purpose`
+- **Cancelable:** no
+
+#### `Fouladgar\OTP\Events\TokenValidated`
+
+- **When:** `validate()` succeeds, before the token is revoked
+- **Payload:** `recipient`, `purpose`
+- **Cancelable:** no
+
+#### `Fouladgar\OTP\Events\TokenValidationFailed`
+
+- **When:** `validate()` receives a missing, invalid, or expired token
+- **Payload:** `recipient`, `purpose`
+- **Cancelable:** no
+
+#### `Fouladgar\OTP\Events\TokenRevoked`
+
+- **When:** a pending token is deleted by `revoke()` or after a successful `validate()`
+- **Payload:** `recipient`, `purpose`
+- **Cancelable:** no
+
+### Notification Events
+
+#### `Fouladgar\OTP\Events\SendingNotification`
+
+- **When:** before the built-in notification is dispatched
+- **Payload:** `recipient`, `token`, `channels`
+- **Cancelable:** yes. If any listener returns `false`, the token stays stored but the package does not send the
+  notification for this call.
+- **Skipped when:** notifications are disabled with `withNotify(false)`
+
+#### `Fouladgar\OTP\Events\NotificationSent`
+
+- **When:** after the built-in notification has been handed off
+- **Payload:** `recipient`, `token`, `channels`
+- **Cancelable:** no
+- **Skipped when:** notifications are disabled with `withNotify(false)`
+
+> `TokenCreationFailed` and `TokenValidationFailed` are useful security signals for repeated OTP requests or
+> brute-force attempts. Missing channel configuration is not emitted as an event; it is reported immediately through
+> `Fouladgar\OTP\Exceptions\OTPException`.
+
+## Translations
+
+Publish the translation file with:
 
 ```
 php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="lang"
@@ -483,38 +458,42 @@ return [
 
 ## Testing
 
-```sh
-composer test
-```
-
 ### Faking a Token in Your Application's Tests
 
-When testing a flow in your own application (e.g. an OTP login endpoint), you need a valid token to submit without
-actually receiving an SMS/email. Use `OTP::fake()` instead of reaching into the cache/database directly — it stores
-a real, valid token using your current configuration (storage driver, `purpose`, etc.), without sending anything:
+When testing a flow in your own application, such as an OTP login endpoint, you usually need a valid token without
+actually sending SMS or email.
+
+Use `OTP::fake()` instead of reaching into the cache or database directly. It stores a real, valid token using your
+current configuration, including storage driver and purpose.
 
 ```php
 <?php
 
 use Fouladgar\OTP\Facades\OTP;
 
-// A random token is generated and stored for you — grab it with the return value.
-$token = OTP::fake('09389599530');
+// Generate and store a random token, then use the returned value in your test.
+$token = OTP::fake('98900000000');
 
 // Or force a specific value if your test needs to assert on it:
-$token = OTP::fake('09389599530', '12345');
+$token = OTP::fake('98900000000', '12345');
 
-// Pass a purpose directly if you're not using the default one — no need for ->purpose() first:
-$token = OTP::fake('09389599530', '12345', 'login_');
+// Pass a purpose directly if you are not using the default one.
+$token = OTP::fake('98900000000', '12345', 'login_');
 
 $this->postJson('/login-otp', [
-    'mobile' => '09389599530',
+    'mobile' => '98900000000',
     'token' => $token,
 ]);
 ```
 
-> `fake()` skips the "already sent" check and doesn't dispatch any events — it's purely a test-setup helper, not
-> part of the `send()`/`validate()` flow.
+> `fake()` skips the "already sent" check and does not dispatch events. It is only a test setup helper, not part of
+> the normal `send()`/`validate()` flow.
+
+### Running Tests
+
+```sh
+composer test
+```
 
 ## Changelog
 
@@ -534,4 +513,4 @@ Laravel-OTP is released under the MIT License. See the bundled
 [LICENSE](https://github.com/mohammad-fouladgar/laravel-otp/blob/master/LICENSE)
 file for details.
 
-Built with :heart: for you.
+Built with ❤️ for you.

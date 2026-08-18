@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\Test;
 
 class OTPFakeTest extends TestCase
 {
-    protected const RECIPIENT = '09389599530';
+    protected const RECIPIENT = '5555555555';
 
     #[Test]
     public function it_can_fake_a_token_with_a_random_value(): void

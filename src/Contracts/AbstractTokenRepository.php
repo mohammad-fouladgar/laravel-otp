@@ -25,7 +25,7 @@ abstract class AbstractTokenRepository implements TokenRepositoryInterface
 
     protected function createNewToken(): string
     {
-        return (string) random_int(10 ** ($this->tokenLength - 1), (10 ** $this->tokenLength) - 1);
+        return resolve(AbstractTokenGenerator::class)->generate($this->tokenLength);
     }
 
     protected function tokenExpired(string $expiresAt): bool

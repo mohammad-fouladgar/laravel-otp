@@ -3,16 +3,14 @@
 namespace Fouladgar\OTP\Tests;
 
 use Fouladgar\OTP\Exceptions\OTPException;
-use Fouladgar\OTP\Notifications\Channels\OTPSMSChannel;
 use Fouladgar\OTP\Notifications\OTPNotification;
 use Illuminate\Notifications\AnonymousNotifiable;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;
 
 class OTPBrokerTest extends TestCase
 {
-    protected const RECIPIENT = '09389599530';
+    protected const RECIPIENT = '5555555555';
 
     #[Test]
     public function it_can_not_send_when_no_channel_is_configured(): void
@@ -25,26 +23,40 @@ class OTPBrokerTest extends TestCase
     }
 
     #[Test]
-    public function it_can_send_without_notifying(): void
+    public function it_can_send_with_notifications_disabled(): void
     {
         Notification::fake();
         config()->set('otp.channel', null);
         config()->set('otp.token_storage', 'cache');
 
-        $this->assertTrue(OTP()->withNotify(false)->send(self::RECIPIENT));
+        $otp = OTP()->withNotify(false);
+        $this->assertTrue($otp->send(self::RECIPIENT));
 
         Notification::assertNothingSent();
-        $signature = config('otp.prefix', 'otp_') . self::RECIPIENT;
-
-        $this->assertNotEmpty(Cache::get($signature));
+        $this->assertNotNull($otp->getToken());
     }
 
     #[Test]
-    public function it_can_validate_a_token_created_without_notifying(): void
+    public function it_can_send_with_notifications_disabled_via_config(): void
     {
-        OTP()->withNotify(false)->send(self::RECIPIENT);
+        Notification::fake();
+        config()->set('otp.channel', null);
+        config()->set('otp.with_notify', false);
 
-        $this->assertTrue(OTP()->validate(self::RECIPIENT, Cache::get(self::RECIPIENT)['token']));
+        $otp = OTP();
+        $this->assertTrue($otp->send(self::RECIPIENT));
+
+        Notification::assertNothingSent();
+        $this->assertNotNull($otp->getToken());
+    }
+
+    #[Test]
+    public function it_can_validate_a_token_created_with_notifications_disabled(): void
+    {
+        $otp = OTP()->withNotify(false);
+        $otp->send(self::RECIPIENT);
+
+        $this->assertTrue(OTP()->validate(self::RECIPIENT, $otp->getToken()));
     }
 
     #[Test]
@@ -52,11 +64,11 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $this->assertTrue(OTP(self::RECIPIENT));
+        $this->assertTrue(OTP()->send(self::RECIPIENT));
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor('otp') === self::RECIPIENT
+            fn ($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor('otp') === self::RECIPIENT
         );
     }
 
@@ -69,7 +81,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
+            fn (OTPNotification $notification, $channels) => $channels[0] == config('otp.channel')
         );
     }
 
@@ -78,12 +90,38 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $useChannels = [OTPSMSChannel::class, 'mail'];
-        $this->assertTrue(OTP(self::RECIPIENT, $useChannels));
+        $useChannels = [CustomOTPChannel::class, 'mail'];
+        $this->assertTrue(OTP()->channel($useChannels)->send(self::RECIPIENT));
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == $useChannels
+            fn (OTPNotification $notification, $channels) => $channels == $useChannels
+        );
+    }
+
+    #[Test]
+    public function it_can_set_channel_as_a_string(): void
+    {
+        Notification::fake();
+
+        $this->assertTrue(OTP()->channel('mail')->send(self::RECIPIENT));
+
+        Notification::assertSentOnDemand(
+            OTPNotification::class,
+            fn (OTPNotification $notification, $channels) => $channels === ['mail']
+        );
+    }
+
+    #[Test]
+    public function it_can_set_channel_as_an_array(): void
+    {
+        Notification::fake();
+
+        $this->assertTrue(OTP()->channel([CustomOTPChannel::class, 'mail'])->send(self::RECIPIENT));
+
+        Notification::assertSentOnDemand(
+            OTPNotification::class,
+            fn (OTPNotification $notification, $channels) => $channels === [CustomOTPChannel::class, 'mail']
         );
     }
 
@@ -92,11 +130,11 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $this->assertTrue(OTP(self::RECIPIENT, [OTPSMSChannel::class, 'mail']));
+        $this->assertTrue(OTP()->channel([CustomOTPChannel::class, 'mail'])->send(self::RECIPIENT));
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor(OTPSMSChannel::class) === self::RECIPIENT
+            fn ($notification, $channels, AnonymousNotifiable $notifiable) => $notifiable->routeNotificationFor(CustomOTPChannel::class) === self::RECIPIENT
                 && $notifiable->routeNotificationFor('mail') === self::RECIPIENT
         );
     }
@@ -106,11 +144,11 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $this->assertTrue(OTP()->channel('otp_sms')->send(self::RECIPIENT));
+        $this->assertTrue(OTP()->channel('otp_log')->send(self::RECIPIENT));
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == ['otp_sms']
+            fn (OTPNotification $notification, $channels) => $channels == ['otp_log']
         );
     }
 
@@ -119,11 +157,11 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        $this->assertTrue(OTP(self::RECIPIENT, [CustomOTPChannel::class]));
+        $this->assertTrue(OTP()->channel([CustomOTPChannel::class])->send(self::RECIPIENT));
 
         Notification::assertSentOnDemand(
             OTPNotification::class,
-            fn(OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
+            fn (OTPNotification $notification, $channels) => $channels == [CustomOTPChannel::class]
         );
     }
 
@@ -140,15 +178,15 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        OTP()->send(self::RECIPIENT);
-
-        $this->assertTrue(OTP()->validate(self::RECIPIENT, Cache::get(self::RECIPIENT)['token']));
+        $otp = OTP();
+        $otp->send(self::RECIPIENT);
+        $this->assertTrue(OTP()->validate(self::RECIPIENT, $otp->getToken()));
 
         // Database Storage
         config()->set('otp.token_storage', 'database');
         $otp = OTP();
         $otp->send(self::RECIPIENT);
-        $this->assertTrue(OTP(self::RECIPIENT, $otp->getToken()));
+        $this->assertTrue(OTP()->validate(self::RECIPIENT, $otp->getToken()));
     }
 
     #[Test]
@@ -156,7 +194,7 @@ class OTPBrokerTest extends TestCase
     {
         Notification::fake();
 
-        OTP(self::RECIPIENT);
+        OTP()->send(self::RECIPIENT);
 
         $this->assertTrue(OTP()->revoke(self::RECIPIENT));
         $this->assertFalse(OTP()->revoke(self::RECIPIENT));
@@ -169,7 +207,7 @@ class OTPBrokerTest extends TestCase
 
         Notification::fake();
 
-        OTP(self::RECIPIENT);
+        OTP()->send(self::RECIPIENT);
 
         OTP()->send(self::RECIPIENT);
     }
@@ -181,9 +219,9 @@ class OTPBrokerTest extends TestCase
 
         $purpose = 'customPurpose_';
 
-        $this->assertTrue(OTP()->purpose($purpose)->send(self::RECIPIENT));
-
-        $this->assertNotEmpty(Cache::get($purpose . self::RECIPIENT));
+        $otp = OTP()->purpose($purpose);
+        $this->assertTrue($otp->send(self::RECIPIENT));
+        $this->assertNotNull($otp->getToken());
     }
 
     #[Test]
@@ -194,19 +232,21 @@ class OTPBrokerTest extends TestCase
         $firstPurpose = 'firstPurpose_';
         $secondPurpose = 'secondPurpose_';
 
-        OTP()->purpose($firstPurpose)->send(self::RECIPIENT);
-        OTP()->purpose($secondPurpose)->send(self::RECIPIENT);
-        OTP()->send(self::RECIPIENT);
+        $firstOtp = OTP()->purpose($firstPurpose);
+        $firstOtp->send(self::RECIPIENT);
 
-        $this->assertNotEmpty(Cache::get($firstPurpose . self::RECIPIENT));
-        $this->assertNotEmpty(Cache::get($secondPurpose . self::RECIPIENT));
-        $this->assertNotEmpty(Cache::get(self::RECIPIENT));
+        $secondOtp = OTP()->purpose($secondPurpose);
+        $secondOtp->send(self::RECIPIENT);
+
+        $defaultOtp = OTP();
+        $defaultOtp->send(self::RECIPIENT);
+
+        $this->assertNotNull($firstOtp->getToken());
+        $this->assertNotNull($secondOtp->getToken());
+        $this->assertNotNull($defaultOtp->getToken());
 
         $this->assertTrue(
-            OTP()->purpose($secondPurpose)->validate(
-                self::RECIPIENT,
-                Cache::get($secondPurpose . self::RECIPIENT)['token']
-            )
+            OTP()->purpose($secondPurpose)->validate(self::RECIPIENT, $secondOtp->getToken())
         );
     }
 
@@ -217,30 +257,25 @@ class OTPBrokerTest extends TestCase
 
         $purpose = 'customPurpose_';
 
-        OTP()->purpose($purpose)->send(self::RECIPIENT);
+        $otp = OTP()->purpose($purpose);
+        $otp->send(self::RECIPIENT);
 
-        $token = Cache::get($purpose . self::RECIPIENT)['token'];
-
-        $this->assertNotEmpty(Cache::get($purpose . self::RECIPIENT));
-
-        $this->assertTrue(OTP()->purpose($purpose)->validate(self::RECIPIENT, $token));
+        $this->assertNotNull($otp->getToken());
+        $this->assertTrue(OTP()->purpose($purpose)->validate(self::RECIPIENT, $otp->getToken()));
     }
 
     #[Test]
-    public function it_can_not_validate_without_custom_purpose(): void
+    public function it_cannot_validate_a_custom_purpose_token_without_the_same_purpose(): void
     {
         Notification::fake();
 
         $firstPurpose = 'firstPurpose_';
 
-        OTP()->purpose($firstPurpose)->send(self::RECIPIENT);
-
-        $this->assertNotEmpty(Cache::get($firstPurpose . self::RECIPIENT));
-
-        $token = Cache::get($firstPurpose . self::RECIPIENT)['token'];
+        $otp = OTP()->purpose($firstPurpose);
+        $otp->send(self::RECIPIENT);
 
         $this->expectException(OTPException::class);
 
-        OTP()->validate(self::RECIPIENT, $token);
+        OTP()->validate(self::RECIPIENT, $otp->getToken());
     }
 }

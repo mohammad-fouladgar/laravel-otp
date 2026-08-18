@@ -27,6 +27,18 @@ return [
 
     /*
      |--------------------------------------------------------------------------
+     | Token Generator
+     |--------------------------------------------------------------------------
+     |
+     | The class responsible for generating a token's value. The default generator produces
+     | numeric-only tokens.
+     |
+     */
+
+    'token_generator' => Fouladgar\OTP\Token\Generators\NumericAbstractTokenGenerator::class,
+
+    /*
+     |--------------------------------------------------------------------------
      | Verification Token Lifetime
      |--------------------------------------------------------------------------
      |
@@ -38,30 +50,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | OTP Prefix
+    | Default Purpose
     |--------------------------------------------------------------------------
     |
-    | Here you can specify prefix of OTP tokens for adding to cache. This also doubles as the default
-    | "purpose" used when you don't call ->purpose() explicitly.
+    | The purpose used when you don't call ->purpose() explicitly. It scopes the token
+    | to a specific flow (e.g. "login_", "password_reset_") so multiple independent OTPs
+    | can exist for the same recipient at once.
     |
     */
 
-    'prefix' => 'otp_',
-
-    /*
-     |--------------------------------------------------------------------------
-     | SMS Client
-     |--------------------------------------------------------------------------
-     |
-     | This package does not send SMS by itself. If you use the bundled "otp_sms" channel
-     | (Fouladgar\OTP\Notifications\Channels\OTPSMSChannel), you must specify your implemented
-     | "SMS Client" class here. This class is responsible for actually sending the SMS.
-     |
-     | If you use your own notification channel via "channel" below instead, this option is not needed at all.
-     |
-     */
-
-    'sms_client' => '',
+    'default_purpose' => 'otp_',
 
     /*
     |--------------------------------------------------------------------------
@@ -79,17 +77,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    |  Notification Channel (REQUIRED)
+    |  Notification Channel
     |--------------------------------------------------------------------------
     |
-    | This package has no opinion on how an OTP token should be delivered, so there is no default channel.
-    | You must specify the notification channel(s) that should be used, e.g. the bundled
-    | "otp_sms" channel (Fouladgar\OTP\Notifications\Channels\OTPSMSChannel::class, which requires "sms_client"
-    | above), your own custom channel class, or any Laravel/third-party notification channel.
+    | The notification channel used to deliver OTP tokens. The bundled "otp_log" channel
+    | logs tokens via Laravel's logger — useful for local development and testing without
+    | any SMS or email setup. Replace it with your real channel before going to production:
+    |
+    |   "mail"     → Laravel's built-in mail channel
+    |   Any custom channel class you implement yourself
     |
     */
 
-    'channel' => null,
+    'channel' => 'otp_log',
 
     /*
     |--------------------------------------------------------------------------

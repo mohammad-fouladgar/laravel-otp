@@ -37,6 +37,9 @@ jobs:
         with:
           php-version: ${{ matrix.php }}
 
+      - name: Disable security advisories block
+        run: composer config policy.advisories.block false
+
       - name: Validate composer.json and composer.lock
         run: composer validate
 

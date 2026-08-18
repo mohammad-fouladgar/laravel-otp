@@ -51,7 +51,7 @@ class CacheTokenRepository extends AbstractTokenRepository
         );
     }
 
-    protected function getSignatureKey($recipient, string $purpose): string
+    protected function getSignatureKey(string $recipient, string $purpose): string
     {
         return sprintf('%s%s', $purpose, $recipient);
     }
