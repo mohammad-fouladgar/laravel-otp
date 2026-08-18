@@ -22,6 +22,7 @@ application's business logic, monitoring, auditing, or external notification ser
 - [Configuration](#configuration)
     - [Notification Channel](#notification-channel)
     - [Token Storage](#token-storage)
+    - [Pruning Expired Tokens](#pruning-expired-tokens)
     - [Token Lifetime](#token-lifetime)
     - [Token Length](#token-length)
     - [Token Generator](#token-generator)
@@ -205,6 +206,20 @@ Then run the migrations:
 ```
 php artisan migrate
 ```
+
+### Pruning Expired Tokens
+
+The `database` driver never deletes an expired row on its own — a validated token is removed immediately, but a
+token nobody ever validated just sits there. Schedule the bundled `otp:prune` command to clean these up:
+
+```php
+// routes/console.php
+
+Schedule::command('otp:prune')->daily();
+```
+
+> Running `otp:prune` while `otp.token_storage` is set to `cache` is a no-op, since cache entries already expire
+> on their own via the store's TTL.
 
 ### Token Lifetime
 
