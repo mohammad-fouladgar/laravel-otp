@@ -23,7 +23,7 @@ class DatabaseTokenRepository extends AbstractTokenRepository
     {
         return (bool) $this->getTable()->where([
             'recipient' => $recipient,
-            'purpose'   => $purpose,
+            'purpose' => $purpose,
         ])->delete();
     }
 

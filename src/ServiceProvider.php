@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Fouladgar\OTP;
 
+use Fouladgar\OTP\Console\Commands\PruneExpiredTokens;
 use Fouladgar\OTP\Contracts\AbstractTokenGenerator;
 use Fouladgar\OTP\Contracts\TokenRepositoryInterface;
 use Fouladgar\OTP\Notifications\Channels\OTPLogChannel;
@@ -27,6 +28,8 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadAssetsFrom();
 
         $this->registerPublishing();
+
+        $this->registerCommands();
     }
 
     public function register(): void
@@ -68,4 +71,12 @@ class ServiceProvider extends BaseServiceProvider
 
         $this->app->singleton(TokenRepositoryInterface::class, fn ($app) => $app['token.repository']->driver());
     }
+
+    protected function registerCommands(): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([PruneExpiredTokens::class]);
+        }
+    }
+
 }
