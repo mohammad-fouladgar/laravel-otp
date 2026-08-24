@@ -34,5 +34,6 @@ class TestCase extends BaseTestCase
     {
         $app['config']->set('otp.channel', 'otp_log');
         $app['config']->set('otp.default_purpose', '');
+        $app['config']->set('otp.validation_timebox_microseconds', 0);
     }
 }

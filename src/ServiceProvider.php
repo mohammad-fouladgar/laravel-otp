@@ -78,5 +78,5 @@ class ServiceProvider extends BaseServiceProvider
             $this->commands([PruneExpiredTokens::class]);
         }
     }
-
 }
+
