@@ -79,4 +79,3 @@ class ServiceProvider extends BaseServiceProvider
         }
     }
 }
-
