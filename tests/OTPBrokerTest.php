@@ -4,6 +4,7 @@ namespace Fouladgar\OTP\Tests;
 
 use Fouladgar\OTP\Exceptions\OTPException;
 use Fouladgar\OTP\Notifications\OTPNotification;
+use Fouladgar\OTP\Tests\Fixtures\CustomOTPChannel;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Notification;
 use PHPUnit\Framework\Attributes\Test;

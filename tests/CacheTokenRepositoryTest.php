@@ -63,7 +63,7 @@ class CacheTokenRepositoryTest extends TestCase
 
         $this->repository = $this->app->make(TokenRepositoryInterface::class);
 
-        $token = $this->repository->create($this->recipient, $this->purpose);
+        $this->repository->create($this->recipient, $this->purpose);
 
         Carbon::setTestNow();
         $this->assertFalse($this->repository->exists($this->recipient, $this->purpose));

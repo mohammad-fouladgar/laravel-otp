@@ -1,6 +1,6 @@
 <?php
 
-namespace Fouladgar\OTP\Tests;
+namespace Fouladgar\OTP\Tests\Fixtures;
 
 use Fouladgar\OTP\Notifications\Messages\OTPMessage;
 use Illuminate\Notifications\Notification;
