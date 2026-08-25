@@ -13,10 +13,13 @@ use Fouladgar\OTP\Events\TokenCreationFailed;
 use Fouladgar\OTP\Events\TokenRevoked;
 use Fouladgar\OTP\Events\TokenValidated;
 use Fouladgar\OTP\Events\TokenValidationFailed;
+use Fouladgar\OTP\Events\TooManyValidationAttempts;
 use Fouladgar\OTP\Exceptions\OTPException;
 use Fouladgar\OTP\Notifications\OTPNotification;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Timebox;
 use Throwable;
 
 class OTPBroker
@@ -68,17 +71,29 @@ class OTPBroker
      */
     public function validate(string $recipient, string $token): bool
     {
-        if (! $this->isTokenMatching($recipient, $token)) {
-            event(new TokenValidationFailed($recipient, $this->purpose));
+        return (new Timebox())->call(function (Timebox $timebox) use ($recipient, $token) {
+            if ($this->tooManyAttempts($recipient)) {
+                event(new TooManyValidationAttempts($recipient, $this->purpose));
 
-            throw OTPException::whenOtpTokenIsInvalid();
-        }
+                throw OTPException::whenTooManyAttempts();
+            }
 
-        event(new TokenValidated($recipient, $this->purpose));
+            if (! $this->isTokenMatching($recipient, $token)) {
+                event(new TokenValidationFailed($recipient, $this->purpose));
 
-        $this->revoke($recipient);
+                throw OTPException::whenOtpTokenIsInvalid();
+            }
 
-        return true;
+            $this->clearAttempts($recipient);
+
+            event(new TokenValidated($recipient, $this->purpose));
+
+            $this->revoke($recipient);
+
+            $timebox->returnEarly();
+
+            return true;
+        }, (int) config('otp.validation_timebox_microseconds', 200_000));
     }
 
     public function withNotify(bool $withNotify = true): static
@@ -126,6 +141,32 @@ class OTPBroker
     private function isTokenMatching(string $recipient, string $token): bool
     {
         return $this->tokenRepository->isTokenMatching($recipient, $this->purpose, $token);
+    }
+
+    private function tooManyAttempts(string $recipient): bool
+    {
+        $maxAttempts = config('otp.rate_limit.max_attempts');
+
+        if (empty($maxAttempts)) {
+            return false;
+        }
+
+        return ! RateLimiter::attempt(
+            $this->rateLimiterKey($recipient),
+            (int) $maxAttempts,
+            static fn () => true,
+            (int) config('otp.rate_limit.decay_seconds', 60)
+        );
+    }
+
+    private function clearAttempts(string $recipient): void
+    {
+        RateLimiter::clear($this->rateLimiterKey($recipient));
+    }
+
+    private function rateLimiterKey(string $recipient): string
+    {
+        return sprintf('otp-validate:%s%s', $this->purpose, $recipient);
     }
 
     private function sendNotification(string $recipient, string $token): void

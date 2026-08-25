@@ -26,8 +26,11 @@ application's business logic, monitoring, auditing, or external notification ser
     - [Token Lifetime](#token-lifetime)
     - [Token Length](#token-length)
     - [Token Generator](#token-generator)
+    - [Rate Limiting](#rate-limiting)
+    - [Validation Timebox](#validation-timebox)
 - [Purpose](#purpose)
 - [Disabling Notifications](#disabling-notifications)
+- [Handling Exceptions](#handling-exceptions)
 - [Customization](#customization)
 - [Events](#events)
 - [Translations](#translations)
@@ -293,6 +296,62 @@ class MyTokenGenerator extends AbstractTokenGenerator
 }
 ```
 
+### Rate Limiting
+
+`validate()` is rate-limited per recipient and purpose to slow down brute-force guessing. By default, at most `5`
+attempts are allowed within `60` seconds; exceeding that throws OTPException (reason TooManyAttempts) and fires the
+TooManyValidationAttempts event — regardless of whether the submitted token was actually correct. A successful
+validation clears the counter immediately.
+
+```php
+// config/otp.php
+
+return [
+    // ...
+
+    'rate_limit' => [
+        'max_attempts'  => env('OTP_RATE_LIMIT_MAX_ATTEMPTS', 5),
+        'decay_seconds' => env('OTP_RATE_LIMIT_DECAY_SECONDS', 60),
+    ],
+
+    // ...
+];
+```
+
+When the limit is exceeded, `validate()` throws `OTPException::whenTooManyAttempts()` and dispatches
+`Fouladgar\OTP\Events\TooManyValidationAttempts`.
+
+Set `max_attempts` to `null` or `0` to disable validation rate limiting:
+
+```php
+'rate_limit' => [
+    'max_attempts'  => null,
+    'decay_seconds' => 60,
+],
+```
+
+Successful validation clears the attempt counter for that recipient/purpose, so the next send/validate cycle starts
+with a fresh allowance.
+
+### Validation Timebox
+
+Failed validation calls are padded to a minimum duration to reduce timing differences between invalid, expired, and
+rate-limited attempts. Successful validations are not delayed.
+
+```php
+// config/otp.php
+
+return [
+    // ...
+
+    'validation_timebox_microseconds' => env('OTP_VALIDATION_TIMEBOX_MICROSECONDS', 200_000),
+
+    // ...
+];
+```
+
+Set the value to `0` to disable the validation timebox.
+
 ## Purpose
 
 Every token is generated for a `recipient` and a `purpose`. The purpose is a short scope tag that lets multiple OTP
@@ -353,6 +412,34 @@ Event::listen(TokenCreated::class, function (TokenCreated $event) {
 ```
 
 `withNotify(false)` only affects `send()`. `validate()` and `revoke()` behave the same either way.
+
+## Handling Exceptions
+
+`send()` and `validate()` throw `Fouladgar\OTP\Exceptions\OTPException` for expected OTP failures. Each exception
+includes a typed `reason` so your application can respond without parsing translated messages.
+
+```php
+use Fouladgar\OTP\Enums\OTPExceptionReason;
+use Fouladgar\OTP\Exceptions\OTPException;
+use Fouladgar\OTP\Facades\OTP;
+
+try {
+    OTP::validate('+98900000000', $request->string('token'));
+} catch (OTPException $e) {
+    return match ($e->reason) {
+        OTPExceptionReason::InvalidToken => back()->withErrors(['token' => $e->getMessage()]),
+        OTPExceptionReason::TooManyAttempts => back()->withErrors(['token' => $e->getMessage()]),
+        default => throw $e,
+    };
+}
+```
+
+Available reasons are:
+
+- `OTPExceptionReason::ChannelNotConfigured`
+- `OTPExceptionReason::AlreadySent`
+- `OTPExceptionReason::InvalidToken`
+- `OTPExceptionReason::TooManyAttempts`
 
 ## Customization
 
@@ -422,6 +509,12 @@ listen for `TokenCreated` and publish the token to a queue or notification servi
 - **Payload:** `recipient`, `purpose`
 - **Cancelable:** no
 
+#### `Fouladgar\OTP\Events\TooManyValidationAttempts`
+
+- **When:** `validate()` is blocked by the configured validation rate limit
+- **Payload:** `recipient`, `purpose`
+- **Cancelable:** no
+
 #### `Fouladgar\OTP\Events\TokenRevoked`
 
 - **When:** a pending token is deleted by `revoke()` or after a successful `validate()`
@@ -445,9 +538,9 @@ listen for `TokenCreated` and publish the token to a queue or notification servi
 - **Cancelable:** no
 - **Skipped when:** notifications are disabled with `withNotify(false)`
 
-> `TokenCreationFailed` and `TokenValidationFailed` are useful security signals for repeated OTP requests or
-> brute-force attempts. Missing channel configuration is not emitted as an event; it is reported immediately through
-> `Fouladgar\OTP\Exceptions\OTPException`.
+> `TokenCreationFailed`, `TokenValidationFailed`, and `TooManyValidationAttempts` are useful security signals for
+> repeated OTP requests or brute-force attempts. Missing channel configuration is not emitted as an event; it is
+> reported immediately through `Fouladgar\OTP\Exceptions\OTPException`.
 
 ## Translations
 
@@ -457,7 +550,7 @@ Publish the translation file with:
 php artisan vendor:publish --provider="Fouladgar\OTP\ServiceProvider" --tag="lang"
 ```
 
-You can customize the provided language file:
+The package ships with English and Persian translations. You can customize the published language files:
 
 ```php
 // resources/lang/vendor/OTP/en/otp.php
@@ -468,6 +561,8 @@ return [
     'otp_token' => 'Your OTP Token is: :token.',
 
     'otp_subject' => 'OTP request',
+
+    'too_many_attempts' => 'Too many attempts. Please try again later.',
 ];
 ```
 

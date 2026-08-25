@@ -8,7 +8,7 @@ return [
      |--------------------------------------------------------------------------
      |
      | Here you should specify name of your OTP tokens table in database.
-     | This table will held all information about created OTP tokens for users.
+     | This table will hold all information about created OTP tokens for users.
      |
      */
 
@@ -104,4 +104,33 @@ return [
     */
 
     'with_notify' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation Rate Limiting
+    |--------------------------------------------------------------------------
+    |
+    | Limits how many times validate() may be attempted for the same recipient/purpose within
+    | the given time window, to slow down brute-force guessing. Set "max_attempts" to null (or 0)
+    | to disable rate limiting entirely.
+    |
+    */
+
+    'rate_limit' => [
+        'max_attempts'  => env('OTP_RATE_LIMIT_MAX_ATTEMPTS', 5),
+        'decay_seconds' => env('OTP_RATE_LIMIT_DECAY_SECONDS', 60),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Validation Timebox
+    |--------------------------------------------------------------------------
+    |
+    | A failed validate() call is padded to take at least this many microseconds, so an
+    | attacker can't use response timing to tell apart an invalid token, an expired one, or a
+    | rate-limited attempt. Successful validations are never delayed. Set to 0 to disable.
+    |
+    */
+
+    'validation_timebox_microseconds' => env('OTP_VALIDATION_TIMEBOX_MICROSECONDS', 200_000),
 ];

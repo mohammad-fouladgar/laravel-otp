@@ -19,4 +19,6 @@ return [
     'otp_has_already_been_sent' => 'OTP has already been sent',
 
     'channel_is_not_configured' => 'No notification channel is configured. Set "otp.channel" in your config file or call ->channel() before sending.',
+
+    'too_many_attempts' => 'Too many attempts. Please try again later.',
 ];
