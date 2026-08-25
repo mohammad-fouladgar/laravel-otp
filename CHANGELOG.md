@@ -1,7 +1,10 @@
-## Unreleased
+## 6.2.0 - 2026-08-25
+ - Add OTP validation rate limiting and exception reasons (#24)
+ - Add support prune expired tokens (#23)
  - Add a pluggable `Fouladgar\OTP\Contracts\AbstractTokenGenerator`, configurable via `otp.token_generator`. Ships
-   with `NumericAbstractTokenGenerator` (default, unchanged behavior) and `AlphanumericAbstractTokenGenerator` for
-   higher-entropy tokens (e.g. email delivery).
+  with `NumericAbstractTokenGenerator` (default, unchanged behavior) and `AlphanumericAbstractTokenGenerator` for
+  higher-entropy tokens (e.g. email delivery).
+ - Add fixture and clean up
 
 ## 6.0.1 - 2026-08-08
  - fix migration
