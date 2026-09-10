@@ -128,6 +128,9 @@ class OTPBroker
         return $revoked;
     }
 
+    /**
+     * Determine if the token matches the recipient and purpose.
+     */
     private function isTokenMatching(string $recipient, string $token): bool
     {
         return $this->tokenRepository->isTokenMatching($recipient, $this->purpose, $token);
