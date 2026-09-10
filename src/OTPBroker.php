@@ -71,7 +71,6 @@ class OTPBroker
      */
     public function validate(string $recipient, string $token): bool
     {
-        return (new Timebox())->call(function (Timebox $timebox) use ($recipient, $token) {
             if ($this->tooManyAttempts($recipient)) {
                 event(new TooManyValidationAttempts($recipient, $this->purpose));
 
@@ -86,14 +85,7 @@ class OTPBroker
 
             $this->clearAttempts($recipient);
 
-            event(new TokenValidated($recipient, $this->purpose));
-
-            $this->revoke($recipient);
-
-            $timebox->returnEarly();
-
             return true;
-        }, (int) config('otp.validation_timebox_microseconds', 200_000));
     }
 
     public function withNotify(bool $withNotify = true): static
