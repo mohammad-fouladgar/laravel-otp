@@ -11,7 +11,6 @@ use Fouladgar\OTP\Events\SendingNotification;
 use Fouladgar\OTP\Events\TokenCreated;
 use Fouladgar\OTP\Events\TokenCreationFailed;
 use Fouladgar\OTP\Events\TokenRevoked;
-use Fouladgar\OTP\Events\TokenValidated;
 use Fouladgar\OTP\Events\TokenValidationFailed;
 use Fouladgar\OTP\Events\TooManyValidationAttempts;
 use Fouladgar\OTP\Exceptions\OTPException;
@@ -19,7 +18,6 @@ use Fouladgar\OTP\Notifications\OTPNotification;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Timebox;
 use Throwable;
 
 class OTPBroker
@@ -71,21 +69,21 @@ class OTPBroker
      */
     public function validate(string $recipient, string $token): bool
     {
-            if ($this->tooManyAttempts($recipient)) {
-                event(new TooManyValidationAttempts($recipient, $this->purpose));
+        if ($this->tooManyAttempts($recipient)) {
+            event(new TooManyValidationAttempts($recipient, $this->purpose));
 
-                throw OTPException::whenTooManyAttempts();
-            }
+            throw OTPException::whenTooManyAttempts();
+        }
 
-            if (! $this->isTokenMatching($recipient, $token)) {
-                event(new TokenValidationFailed($recipient, $this->purpose));
+        if (! $this->isTokenMatching($recipient, $token)) {
+            event(new TokenValidationFailed($recipient, $this->purpose));
 
-                throw OTPException::whenOtpTokenIsInvalid();
-            }
+            throw OTPException::whenOtpTokenIsInvalid();
+        }
 
-            $this->clearAttempts($recipient);
+        $this->clearAttempts($recipient);
 
-            return true;
+        return true;
     }
 
     public function withNotify(bool $withNotify = true): static
