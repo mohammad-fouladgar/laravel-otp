@@ -7,6 +7,8 @@
 
 > **Upgrading from v5?** See the [Upgrade Guide](UPGRADE.md) for a step-by-step migration walkthrough.
 
+![Laravel-OTP](./cover.jpg "Laravel-OTP")
+
 ## Introduction
 Laravel OTP provides a secure, simple, and flexible way to generate, send, and validate One-Time Passwords. It supports
 multiple independent OTP flows through purpose-based tokens, ensuring that another cannot consume a token generated
